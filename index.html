@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Techniques Hub</title>
+    <link rel="stylesheet" href="includes/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <header>
+        <h1>🎓 Study Techniques Hub</h1>
+        <p>Choose your study technique and boost your learning efficiency!</p>
+    </header>
+
+    <main>
+        <div class="technique-selector">
+            <h2>Select a Study Technique</h2>
+            <div class="technique-grid">
+                <button class="technique-btn" data-technique="pomodoro">
+                    🍅 Pomodoro Timer
+                </button>
+                <button class="technique-btn" data-technique="flashcards">
+                    📚 Digital Flashcards
+                </button>
+                <button class="technique-btn" data-technique="spaced-repetition">
+                    📅 Spaced Repetition
+                </button>
+                <button class="technique-btn" data-technique="active-recall">
+                    🧠 Active Recall
+                </button>
+                <button class="technique-btn" data-technique="mind-map">
+                    🗺️ Mind Mapping
+                </button>
+                <button class="technique-btn" data-technique="cornell-notes">
+                    📝 Cornell Notes
+                </button>
+            </div>
+        </div>
+
+        <div class="technique-container">
+            <!-- Pomodoro Timer -->
+            <div id="pomodoro" class="technique-panel hidden">
+                <h3>🍅 Pomodoro Timer</h3>
+                <p>Work in focused 25-minute intervals with 5-minute breaks</p>
+                <div class="timer-display">
+                    <div class="timer-circle">
+                        <span id="timer-text">25:00</span>
+                    </div>
+                </div>
+                <div class="timer-controls">
+                    <button id="start-timer" class="btn-primary">Start</button>
+                    <button id="pause-timer" class="btn-secondary">Pause</button>
+                    <button id="reset-timer" class="btn-secondary">Reset</button>
+                </div>
+                <div class="timer-settings">
+                    <label>Work: <input type="number" id="work-minutes" value="25" min="1" max="60"> minutes</label>
+                    <label>Break: <input type="number" id="break-minutes" value="5" min="1" max="30"> minutes</label>
+                </div>
+                <div class="session-info">
+                    <p>Session: <span id="session-count">1</span> | Type: <span id="session-type">Work</span></p>
+                </div>
+            </div>
+
+            <!-- Flashcards -->
+            <div id="flashcards" class="technique-panel hidden">
+                <h3>📚 Digital Flashcards</h3>
+                <p>Create and review flashcards for effective memorization</p>
+                
+                <div class="flashcard-creator">
+                    <h4>Create New Flashcard</h4>
+                    <input type="text" id="card-front" placeholder="Front (Question/Term)">
+                    <textarea id="card-back" placeholder="Back (Answer/Definition)"></textarea>
+                    <button id="add-card" class="btn-primary">Add Card</button>
+                </div>
+
+                <div class="flashcard-study">
+                    <div id="flashcard-display" class="flashcard hidden">
+                        <div class="card-content">
+                            <div id="card-text"></div>
+                        </div>
+                        <button id="flip-card" class="btn-secondary">Flip Card</button>
+                        <div class="card-controls hidden">
+                            <button id="know-card" class="btn-success">I Know This</button>
+                            <button id="dont-know-card" class="btn-danger">Need to Review</button>
+                        </div>
+                    </div>
+                    <div class="study-controls">
+                        <button id="start-study" class="btn-primary">Start Studying</button>
+                        <button id="next-card" class="btn-secondary hidden">Next Card</button>
+                    </div>
+                    <div class="card-progress">
+                        <p>Cards: <span id="card-progress">0/0</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spaced Repetition -->
+            <div id="spaced-repetition" class="technique-panel hidden">
+                <h3>📅 Spaced Repetition</h3>
+                <p>Review material at increasing intervals for long-term retention</p>
+                
+                <div class="spaced-rep-creator">
+                    <h4>Add Study Material</h4>
+                    <input type="text" id="sr-topic" placeholder="Topic/Subject">
+                    <textarea id="sr-content" placeholder="Content to memorize"></textarea>
+                    <button id="add-sr-item" class="btn-primary">Add Item</button>
+                </div>
+
+                <div class="spaced-rep-review">
+                    <h4>Items Due for Review</h4>
+                    <div id="sr-items" class="sr-items-list"></div>
+                    <button id="start-sr-review" class="btn-primary">Start Review Session</button>
+                </div>
+            </div>
+
+            <!-- Active Recall -->
+            <div id="active-recall" class="technique-panel hidden">
+                <h3>🧠 Active Recall</h3>
+                <p>Test yourself without looking at notes first</p>
+                
+                <div class="recall-setup">
+                    <h4>Set Up Recall Session</h4>
+                    <input type="text" id="recall-topic" placeholder="What topic are you studying?">
+                    <textarea id="recall-questions" placeholder="Enter questions (one per line)"></textarea>
+                    <button id="start-recall" class="btn-primary">Start Recall Session</button>
+                </div>
+
+                <div id="recall-session" class="recall-session hidden">
+                    <div class="question-display">
+                        <h4 id="current-question"></h4>
+                        <textarea id="recall-answer" placeholder="Write your answer here..."></textarea>
+                    </div>
+                    <div class="recall-controls">
+                        <button id="next-question" class="btn-primary">Next Question</button>
+                        <button id="finish-recall" class="btn-secondary">Finish Session</button>
+                    </div>
+                    <div class="question-progress">
+                        <p>Question: <span id="question-progress">1/1</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mind Map -->
+            <div id="mind-map" class="technique-panel hidden">
+                <h3>🗺️ Mind Mapping</h3>
+                <p>Create visual connections between concepts</p>
+                
+                <div class="mind-map-controls">
+                    <input type="text" id="central-topic" placeholder="Central Topic">
+                    <button id="create-map" class="btn-primary">Create Mind Map</button>
+                    <button id="add-branch" class="btn-secondary">Add Branch</button>
+                    <button id="clear-map" class="btn-danger">Clear Map</button>
+                </div>
+
+                <div id="mind-map-canvas" class="mind-map-canvas">
+                    <p class="instruction">Enter a central topic and click "Create Mind Map" to begin</p>
+                </div>
+            </div>
+
+            <!-- Cornell Notes -->
+            <div id="cornell-notes" class="technique-panel hidden">
+                <h3>📝 Cornell Notes</h3>
+                <p>Organize notes with cues, main content, and summary</p>
+                
+                <div class="cornell-template">
+                    <div class="cornell-header">
+                        <input type="text" id="cornell-title" placeholder="Lecture/Topic Title">
+                        <input type="date" id="cornell-date">
+                    </div>
+                    
+                    <div class="cornell-body">
+                        <div class="cornell-cues">
+                            <h4>Cues/Questions</h4>
+                            <textarea id="cornell-cues-text" placeholder="Key points, questions, keywords..."></textarea>
+                        </div>
+                        
+                        <div class="cornell-notes">
+                            <h4>Notes</h4>
+                            <textarea id="cornell-notes-text" placeholder="Main lecture notes, ideas, facts..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="cornell-summary">
+                        <h4>Summary</h4>
+                        <textarea id="cornell-summary-text" placeholder="Summarize the main points..."></textarea>
+                    </div>
+                    
+                    <div class="cornell-controls">
+                        <button id="save-cornell" class="btn-primary">Save Notes</button>
+                        <button id="export-cornell" class="btn-secondary">Export as Text</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Study Techniques Hub - Enhance your learning journey</p>
+    </footer>
+
+    <script src="includes/app.js"></script>
+</body>
+</html>
