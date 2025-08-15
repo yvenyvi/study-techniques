@@ -65,8 +65,8 @@ class PomodoroTimer {
         this.isRunning = false;
         this.isPaused = false;
         this.currentTime = 25 * 60; // 25 minutes in seconds
-        this.workTime = 25 * 60;
-        this.breakTime = 5 * 60;
+        this.workTime = Math.max(5, 25) * 60; // Minimum 5 minutes
+        this.breakTime = Math.max(5, 5) * 60; // Minimum 5 minutes
         this.isBreakTime = false;
         this.sessionCount = 1;
         this.intervalId = null;
@@ -229,7 +229,9 @@ class PomodoroTimer {
         document.getElementById('reset-timer').addEventListener('click', () => this.reset());
         
         document.getElementById('work-minutes').addEventListener('change', (e) => {
-            this.workTime = parseInt(e.target.value) * 60;
+            const minutes = Math.max(5, parseInt(e.target.value)); // Minimum 5 minutes
+            e.target.value = minutes; // Update the input field to reflect the minimum
+            this.workTime = minutes * 60;
             if (!this.isBreakTime) {
                 this.currentTime = this.workTime;
                 this.updateDisplay();
@@ -237,7 +239,9 @@ class PomodoroTimer {
         });
 
         document.getElementById('break-minutes').addEventListener('change', (e) => {
-            this.breakTime = parseInt(e.target.value) * 60;
+            const minutes = Math.max(5, parseInt(e.target.value)); // Minimum 5 minutes
+            e.target.value = minutes; // Update the input field to reflect the minimum
+            this.breakTime = minutes * 60;
             if (this.isBreakTime) {
                 this.currentTime = this.breakTime;
                 this.updateDisplay();
