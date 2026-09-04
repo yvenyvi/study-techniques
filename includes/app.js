@@ -16,7 +16,7 @@ class StudyTechniquesApp {
         // Technique selector buttons
         document.querySelectorAll('.technique-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const technique = e.target.dataset.technique;
+                const technique = e.currentTarget.dataset.technique;
                 this.switchTechnique(technique);
             });
         });
@@ -257,7 +257,7 @@ class PomodoroTimer {
             this.intervalId = setInterval(() => this.tick(), 1000);
             
             // Show SweetAlert notification
-            Swal.fire({
+            CustomModal.fire({
                 title: 'Timer Started!',
                 text: this.isBreakTime ? 'Break time has begun' : 'Focus time has begun',
                 icon: 'success',
@@ -276,7 +276,7 @@ class PomodoroTimer {
             clearInterval(this.intervalId);
             
             // Show pause notification
-            Swal.fire({
+            CustomModal.fire({
                 title: 'Timer Paused',
                 text: 'Take your time, click resume when ready',
                 icon: 'warning',
@@ -298,7 +298,7 @@ class PomodoroTimer {
         this.updateDisplay();
         
         // Show reset notification
-        Swal.fire({
+        CustomModal.fire({
             title: 'Timer Reset',
             text: 'Timer has been reset to initial time',
             icon: 'info',
@@ -345,7 +345,7 @@ class PomodoroTimer {
         
         if (isWorkComplete) {
             // Work session completed
-            Swal.fire({
+            CustomModal.fire({
                 title: '🎉 Work Session Complete!',
                 text: 'Great job! Time for a well-deserved break.',
                 icon: 'success',
@@ -361,7 +361,7 @@ class PomodoroTimer {
             });
         } else {
             // Break session completed
-            Swal.fire({
+            CustomModal.fire({
                 title: '⚡ Break Time Over!',
                 text: 'Ready to focus again? Let\'s get back to work!',
                 icon: 'info',
@@ -410,729 +410,48 @@ class PomodoroTimer {
     }
 }
 
-// Flashcards System Class
-class FlashcardsSystem {
-    constructor() {
-        this.cards = JSON.parse(localStorage.getItem('flashcards')) || [];
-        this.currentCardIndex = 0;
-        this.isStudying = false;
-        this.showingFront = true;
-        this.studyQueue = [];
-        
-        this.setupEventListeners();
-        this.updateProgress();
-    }
-
-    setupEventListeners() {
-        document.getElementById('add-card').addEventListener('click', () => this.addCard());
-        document.getElementById('start-study').addEventListener('click', () => this.startStudy());
-        document.getElementById('flip-card').addEventListener('click', () => this.flipCard());
-        document.getElementById('know-card').addEventListener('click', () => this.markCard(true));
-        document.getElementById('dont-know-card').addEventListener('click', () => this.markCard(false));
-        document.getElementById('next-card').addEventListener('click', () => this.nextCard());
-        
-        // Allow Enter key to add cards
-        document.getElementById('card-back').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                this.addCard();
+class CustomModal {
+    static fire(arg1, arg2, arg3) {
+        let options = arg1;
+        if (typeof arg1 === 'string') {
+            options = { title: arg1, text: arg2, icon: arg3 };
+        }
+        if (options.toast) {
+            return this.showToast(options);
+        }
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = options.title || '';
+            document.getElementById('modal-text').innerHTML = options.text || '';
+            const btnContainer = document.getElementById('modal-buttons');
+            btnContainer.innerHTML = '';
+            if (options.showCancelButton) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn-secondary';
+                cancelBtn.textContent = options.cancelButtonText || 'Cancel';
+                cancelBtn.onclick = () => { overlay.classList.add('hidden'); resolve({ isConfirmed: false }); };
+                btnContainer.appendChild(cancelBtn);
             }
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'btn-primary';
+            confirmBtn.textContent = options.confirmButtonText || 'OK';
+            confirmBtn.onclick = () => { overlay.classList.add('hidden'); resolve({ isConfirmed: true }); };
+            btnContainer.appendChild(confirmBtn);
+            overlay.classList.remove('hidden');
         });
     }
-
-    addCard() {
-        const front = document.getElementById('card-front').value.trim();
-        const back = document.getElementById('card-back').value.trim();
-        
-        if (front && back) {
-            const card = {
-                id: Date.now(),
-                front: front,
-                back: back,
-                difficulty: 0, // 0: new, 1: easy, 2: medium, 3: hard
-                lastReviewed: null,
-                correctCount: 0,
-                incorrectCount: 0
-            };
-            
-            this.cards.push(card);
-            this.saveCards();
-            this.clearForm();
-            this.updateProgress();
-            this.showFeedback('Card added successfully!');
-        } else {
-            Swal.fire({
-                title: 'Missing Information',
-                text: 'Please fill in both front and back of the card.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-        }
-    }
-
-    startStudy() {
-        if (this.cards.length === 0) {
-            Swal.fire({
-                title: 'No Cards Available',
-                text: 'Please add some cards first!',
-                icon: 'info',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        this.studyQueue = [...this.cards];
-        this.currentCardIndex = 0;
-        this.isStudying = true;
-        this.showingFront = true;
-        
-        this.showCurrentCard();
-        this.toggleStudyMode(true);
-        
-        Swal.fire({
-            title: 'Study Session Started!',
-            text: `Ready to study ${this.cards.length} cards`,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    }
-
-    showCurrentCard() {
-        if (this.currentCardIndex >= this.studyQueue.length) {
-            this.endStudySession();
-            return;
-        }
-        
-        const card = this.studyQueue[this.currentCardIndex];
-        const cardText = this.showingFront ? card.front : card.back;
-        
-        document.getElementById('card-text').textContent = cardText;
-        document.querySelector('.card-controls').classList.toggle('hidden', this.showingFront);
-        
-        this.updateProgress();
-    }
-
-    flipCard() {
-        this.showingFront = !this.showingFront;
-        this.showCurrentCard();
-    }
-
-    markCard(isCorrect) {
-        const card = this.studyQueue[this.currentCardIndex];
-        
-        if (isCorrect) {
-            card.correctCount++;
-            card.difficulty = Math.max(0, card.difficulty - 1);
-        } else {
-            card.incorrectCount++;
-            card.difficulty = Math.min(3, card.difficulty + 1);
-        }
-        
-        card.lastReviewed = new Date().toISOString();
-        this.saveCards();
-        this.nextCard();
-    }
-
-    nextCard() {
-        this.currentCardIndex++;
-        this.showingFront = true;
-        this.showCurrentCard();
-    }
-
-    endStudySession() {
-        this.isStudying = false;
-        this.toggleStudyMode(false);
-        
-        Swal.fire({
-            title: '🎉 Study Session Complete!',
-            text: 'Great job! You\'ve reviewed all your cards.',
-            icon: 'success',
-            confirmButtonText: 'Awesome!'
-        });
-    }
-
-    toggleStudyMode(studying) {
-        document.getElementById('flashcard-display').classList.toggle('hidden', !studying);
-        document.getElementById('start-study').classList.toggle('hidden', studying);
-        document.getElementById('next-card').classList.toggle('hidden', !studying);
-    }
-
-    clearForm() {
-        document.getElementById('card-front').value = '';
-        document.getElementById('card-back').value = '';
-    }
-
-    updateProgress() {
-        const current = this.isStudying ? this.currentCardIndex + 1 : 0;
-        const total = this.isStudying ? this.studyQueue.length : this.cards.length;
-        document.getElementById('card-progress').textContent = `${current}/${total}`;
-    }
-
-    saveCards() {
-        localStorage.setItem('flashcards', JSON.stringify(this.cards));
-    }
-
-    showFeedback(message) {
-        Swal.fire({
-            title: 'Success!',
-            text: message,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    }
-}
-
-// Spaced Repetition System Class
-class SpacedRepetitionSystem {
-    constructor() {
-        this.items = JSON.parse(localStorage.getItem('spacedRepetitionItems')) || [];
-        this.setupEventListeners();
-        this.updateItemsList();
-    }
-
-    setupEventListeners() {
-        document.getElementById('add-sr-item').addEventListener('click', () => this.addItem());
-        document.getElementById('start-sr-review').addEventListener('click', () => this.startReview());
-    }
-
-    addItem() {
-        const topic = document.getElementById('sr-topic').value.trim();
-        const content = document.getElementById('sr-content').value.trim();
-        
-        if (topic && content) {
-            const item = {
-                id: Date.now(),
-                topic: topic,
-                content: content,
-                interval: 1, // days
-                easeFactor: 2.5,
-                repetitions: 0,
-                nextReview: new Date(),
-                lastReviewed: null
-            };
-            
-            this.items.push(item);
-            this.saveItems();
-            this.clearForm();
-            this.updateItemsList();
-            
-            Swal.fire({
-                title: 'Item Added!',
-                text: `"${topic}" has been added to your spaced repetition queue`,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-        } else {
-            Swal.fire({
-                title: 'Missing Information',
-                text: 'Please fill in both topic and content.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-        }
-    }
-
-    updateItemsList() {
-        const container = document.getElementById('sr-items');
-        const dueItems = this.getDueItems();
-        
-        container.innerHTML = '';
-        
-        if (dueItems.length === 0) {
-            container.innerHTML = '<p>No items due for review right now.</p>';
-            return;
-        }
-
-        dueItems.forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.className = 'sr-item';
-            itemElement.innerHTML = `
-                <h5>${item.topic}</h5>
-                <p>${item.content.substring(0, 100)}...</p>
-                <div class="due-date">Due: ${this.formatDate(item.nextReview)}</div>
-            `;
-            container.appendChild(itemElement);
-        });
-    }
-
-    getDueItems() {
-        const now = new Date();
-        return this.items.filter(item => new Date(item.nextReview) <= now);
-    }
-
-    startReview() {
-        const dueItems = this.getDueItems();
-        if (dueItems.length === 0) {
-            Swal.fire({
-                title: 'No Reviews Due',
-                text: 'No items are due for review right now! Check back later.',
-                icon: 'info',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        // Enhanced review implementation with SweetAlert
-        this.reviewItems(dueItems, 0);
-    }
-
-    async reviewItems(items, index) {
-        if (index >= items.length) {
-            // Review complete
-            this.saveItems();
-            this.updateItemsList();
-            
-            Swal.fire({
-                title: '🎉 Review Complete!',
-                text: `You've reviewed ${items.length} items. Great job!`,
-                icon: 'success',
-                confirmButtonText: 'Awesome!'
-            });
-            return;
-        }
-
-        const item = items[index];
-        
-        const { value: difficulty } = await Swal.fire({
-            title: item.topic,
-            html: `
-                <div style="text-align: left; margin: 20px 0;">
-                    <p><strong>Content:</strong></p>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                        ${item.content}
-                    </div>
-                </div>
-            `,
-            input: 'select',
-            inputOptions: {
-                '1': '😊 Easy - I knew this well',
-                '2': '👍 Good - I remembered after thinking',
-                '3': '😰 Hard - I struggled with this'
-            },
-            inputPlaceholder: 'How difficult was this?',
-            showCancelButton: true,
-            confirmButtonText: 'Next',
-            cancelButtonText: 'Stop Review',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Please select a difficulty level!';
-                }
-            }
-        });
-
-        if (difficulty) {
-            this.updateItemAfterReview(item, parseInt(difficulty));
-            this.reviewItems(items, index + 1);
-        }
-    }
-
-    updateItemAfterReview(item, difficulty) {
-        item.lastReviewed = new Date();
-        item.repetitions++;
-        
-        // SM-2 algorithm simplified
-        if (difficulty >= 3) {
-            item.repetitions = 0;
-            item.interval = 1;
-        } else {
-            if (item.repetitions === 1) {
-                item.interval = 1;
-            } else if (item.repetitions === 2) {
-                item.interval = 6;
-            } else {
-                item.interval = Math.round(item.interval * item.easeFactor);
-            }
-            
-            item.easeFactor = item.easeFactor + (0.1 - (5 - difficulty) * (0.08 + (5 - difficulty) * 0.02));
-            item.easeFactor = Math.max(1.3, item.easeFactor);
-        }
-        
-        const nextReview = new Date();
-        nextReview.setDate(nextReview.getDate() + item.interval);
-        item.nextReview = nextReview;
-    }
-
-    clearForm() {
-        document.getElementById('sr-topic').value = '';
-        document.getElementById('sr-content').value = '';
-    }
-
-    formatDate(date) {
-        return new Date(date).toLocaleDateString();
-    }
-
-    saveItems() {
-        localStorage.setItem('spacedRepetitionItems', JSON.stringify(this.items));
-    }
-}
-
-// Active Recall System Class
-class ActiveRecallSystem {
-    constructor() {
-        this.questions = [];
-        this.currentQuestionIndex = 0;
-        this.answers = [];
-        this.isSessionActive = false;
-        
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        document.getElementById('start-recall').addEventListener('click', () => this.startSession());
-        document.getElementById('next-question').addEventListener('click', () => this.nextQuestion());
-        document.getElementById('finish-recall').addEventListener('click', () => this.finishSession());
-    }
-
-    startSession() {
-        const topic = document.getElementById('recall-topic').value.trim();
-        const questionsText = document.getElementById('recall-questions').value.trim();
-        
-        if (!topic || !questionsText) {
-            Swal.fire({
-                title: 'Missing Information',
-                text: 'Please enter a topic and questions.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        this.questions = questionsText.split('\n').filter(q => q.trim());
-        this.currentQuestionIndex = 0;
-        this.answers = [];
-        this.isSessionActive = true;
-        
-        this.showQuestion();
-        this.toggleSessionMode(true);
-        
-        Swal.fire({
-            title: 'Active Recall Started!',
-            text: `Ready to answer ${this.questions.length} questions about ${topic}`,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    }
-
-    showQuestion() {
-        if (this.currentQuestionIndex >= this.questions.length) {
-            this.finishSession();
-            return;
-        }
-        
-        const question = this.questions[this.currentQuestionIndex];
-        document.getElementById('current-question').textContent = question;
-        document.getElementById('recall-answer').value = '';
-        document.getElementById('question-progress').textContent = 
-            `${this.currentQuestionIndex + 1}/${this.questions.length}`;
-    }
-
-    nextQuestion() {
-        const answer = document.getElementById('recall-answer').value.trim();
-        this.answers.push({
-            question: this.questions[this.currentQuestionIndex],
-            answer: answer,
-            timestamp: new Date()
-        });
-        
-        this.currentQuestionIndex++;
-        this.showQuestion();
-    }
-
-    finishSession() {
-        this.isSessionActive = false;
-        this.toggleSessionMode(false);
-        this.showSessionSummary();
-    }
-
-    showSessionSummary() {
-        const summaryHtml = this.answers.map((item, index) => 
-            `<div style="text-align: left; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
-                <strong>Q${index + 1}:</strong> ${item.question}<br>
-                <strong>Your Answer:</strong> ${item.answer || '<em>No answer provided</em>'}
-            </div>`
-        ).join('');
-        
-        Swal.fire({
-            title: '🎉 Session Complete!',
-            html: `
-                <div style="max-height: 400px; overflow-y: auto;">
-                    <p><strong>You answered ${this.answers.length} questions:</strong></p>
-                    ${summaryHtml}
-                </div>
-            `,
-            width: '600px',
-            confirmButtonText: 'Great!'
-        });
-    }
-
-    toggleSessionMode(active) {
-        document.querySelector('.recall-setup').classList.toggle('hidden', active);
-        document.getElementById('recall-session').classList.toggle('hidden', !active);
-    }
-}
-
-// Mind Map System Class
-class MindMapSystem {
-    constructor() {
-        this.nodes = [];
-        this.connections = [];
-        this.canvas = document.getElementById('mind-map-canvas');
-        this.centralNode = null;
-        
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        document.getElementById('create-map').addEventListener('click', () => this.createMap());
-        document.getElementById('add-branch').addEventListener('click', () => this.addBranch());
-        document.getElementById('clear-map').addEventListener('click', () => this.clearMap());
-    }
-
-    createMap() {
-        const topic = document.getElementById('central-topic').value.trim();
-        if (!topic) {
-            Swal.fire({
-                title: 'Missing Topic',
-                text: 'Please enter a central topic.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        this.clearMap();
-        this.centralNode = this.createNode(topic, 
-            this.canvas.offsetWidth / 2, 
-            this.canvas.offsetHeight / 2, 
-            true
-        );
-        
-        Swal.fire({
-            title: 'Mind Map Created!',
-            text: `Central topic "${topic}" has been created. Click "Add Branch" to expand your map.`,
-            icon: 'success',
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    }
-
-    async addBranch() {
-        if (!this.centralNode) {
-            Swal.fire({
-                title: 'No Central Topic',
-                text: 'Please create a central topic first.',
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-        
-        const { value: text } = await Swal.fire({
-            title: 'Add New Branch',
-            input: 'text',
-            inputLabel: 'Enter branch text:',
-            inputPlaceholder: 'Type your idea here...',
-            showCancelButton: true,
-            confirmButtonText: 'Add Branch',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Please enter some text for the branch!';
-                }
-            }
-        });
-
-        if (text) {
-            const angle = Math.random() * 2 * Math.PI;
-            const radius = 150;
-            const x = this.centralNode.offsetLeft + Math.cos(angle) * radius;
-            const y = this.centralNode.offsetTop + Math.sin(angle) * radius;
-            
-            this.createNode(text, x, y, false);
-        }
-    }
-
-    createNode(text, x, y, isCentral = false) {
-        const node = document.createElement('div');
-        node.className = `mind-map-node ${isCentral ? 'central' : ''}`;
-        node.textContent = text;
-        node.style.left = `${x}px`;
-        node.style.top = `${y}px`;
-        
-        this.makeDraggable(node);
-        this.canvas.appendChild(node);
-        this.nodes.push(node);
-        
-        return node;
-    }
-
-    makeDraggable(element) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        
-        element.onmousedown = dragMouseDown;
-        
-        function dragMouseDown(e) {
-            e = e || window.event;
-            e.preventDefault();
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
-        }
-        
-        function elementDrag(e) {
-            e = e || window.event;
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            element.style.top = (element.offsetTop - pos2) + "px";
-            element.style.left = (element.offsetLeft - pos1) + "px";
-        }
-        
-        function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
-        }
-    }
-
-    clearMap() {
-        this.nodes.forEach(node => node.remove());
-        this.nodes = [];
-        this.connections = [];
-        this.centralNode = null;
-        
-        const instruction = document.createElement('p');
-        instruction.className = 'instruction';
-        instruction.textContent = 'Enter a central topic and click "Create Mind Map" to begin';
-        this.canvas.appendChild(instruction);
-    }
-}
-
-// Cornell Notes System Class
-class CornellNotesSystem {
-    constructor() {
-        this.setupEventListeners();
-        this.loadSavedNotes();
-    }
-
-    setupEventListeners() {
-        document.getElementById('save-cornell').addEventListener('click', () => this.saveNotes());
-        document.getElementById('export-cornell').addEventListener('click', () => this.exportNotes());
-        
-        // Auto-save every 30 seconds
-        setInterval(() => this.autoSave(), 30000);
-    }
-
-    saveNotes() {
-        const notes = this.collectNotesData();
-        const timestamp = new Date().toISOString();
-        
-        let savedNotes = JSON.parse(localStorage.getItem('cornellNotes')) || [];
-        
-        // Check if updating existing note or creating new one
-        const existingIndex = savedNotes.findIndex(note => 
-            note.title === notes.title && 
-            note.date === notes.date
-        );
-        
-        if (existingIndex !== -1) {
-            savedNotes[existingIndex] = { ...notes, lastModified: timestamp };
-        } else {
-            savedNotes.push({ ...notes, created: timestamp, lastModified: timestamp });
-        }
-        
-        localStorage.setItem('cornellNotes', JSON.stringify(savedNotes));
-        this.showFeedback('Notes saved successfully!');
-    }
-
-    autoSave() {
-        const notes = this.collectNotesData();
-        if (notes.title || notes.cues || notes.notes || notes.summary) {
-            localStorage.setItem('cornellNotesDraft', JSON.stringify(notes));
-        }
-    }
-
-    loadSavedNotes() {
-        const draft = localStorage.getItem('cornellNotesDraft');
-        if (draft) {
-            const notes = JSON.parse(draft);
-            document.getElementById('cornell-title').value = notes.title || '';
-            document.getElementById('cornell-date').value = notes.date || '';
-            document.getElementById('cornell-cues-text').value = notes.cues || '';
-            document.getElementById('cornell-notes-text').value = notes.notes || '';
-            document.getElementById('cornell-summary-text').value = notes.summary || '';
-        }
-    }
-
-    collectNotesData() {
-        return {
-            title: document.getElementById('cornell-title').value.trim(),
-            date: document.getElementById('cornell-date').value,
-            cues: document.getElementById('cornell-cues-text').value.trim(),
-            notes: document.getElementById('cornell-notes-text').value.trim(),
-            summary: document.getElementById('cornell-summary-text').value.trim()
-        };
-    }
-
-    exportNotes() {
-        const notes = this.collectNotesData();
-        
-        const exportText = `
-CORNELL NOTES
-=============
-
-Title: ${notes.title}
-Date: ${notes.date}
-
-CUES/QUESTIONS:
-${notes.cues}
-
-NOTES:
-${notes.notes}
-
-SUMMARY:
-${notes.summary}
-
-Generated by Study Techniques Hub - ${new Date().toLocaleString()}
-        `.trim();
-        
-        this.downloadTextFile(exportText, `cornell-notes-${notes.title || 'untitled'}.txt`);
-    }
-
-    downloadTextFile(content, filename) {
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }
-
-    showFeedback(message) {
-        Swal.fire({
-            title: 'Success!',
-            text: message,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
+    static showToast(options) {
+        const toast = document.getElementById('custom-toast');
+        document.getElementById('toast-text').textContent = options.title || options.text || '';
+        toast.classList.remove('hidden');
+        const iconSpan = document.getElementById('toast-icon');
+        if (options.icon === 'success') iconSpan.textContent = '✅';
+        else if (options.icon === 'warning') iconSpan.textContent = '⚠️';
+        else if (options.icon === 'info') iconSpan.textContent = 'ℹ️';
+        else if (options.icon === 'error') iconSpan.textContent = '❌';
+        else iconSpan.textContent = '';
+        setTimeout(() => { toast.classList.add('hidden'); }, options.timer || 3000);
+        return Promise.resolve({ isConfirmed: true });
     }
 }
 
@@ -1186,28 +505,185 @@ class Utils {
     }
 }
 
+// PDF Notes System
+class PdfNotesSystem {
+    constructor() {
+        this.fileInput = document.getElementById('pdf-file-input');
+        this.uploadBox = document.querySelector('.upload-box');
+        this.loadingState = document.getElementById('pdf-loading-state');
+        this.notesResult = document.getElementById('pdf-notes-result');
+        this.notesContent = document.getElementById('generated-notes-content');
+        this.resetBtn = document.getElementById('reset-pdf-btn');
+        this.exportBtn = document.getElementById('export-pdf-btn');
+
+        this.supabaseUrl = 'https://kcwlzexmmjbbarltxfvv.supabase.co';
+        this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtjd2x6ZXhtbWpiYmFybHR4ZnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTczODIsImV4cCI6MjEwNDA5MzM4Mn0.RO_ZbiG1R1ycstSidkeMz11Bml3-hn35GGfHfVAtEjU';
+        
+        if (window.supabase) {
+            this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+        }
+
+        if (this.fileInput && this.uploadBox) {
+            this.setupEventListeners();
+        }
+    }
+
+    setupEventListeners() {
+        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+        this.resetBtn.addEventListener('click', () => this.resetState());
+        if (this.exportBtn) {
+            this.exportBtn.addEventListener('click', () => this.exportAsPdf());
+        }
+
+        this.uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.uploadBox.style.borderColor = '#3b82f6';
+            this.uploadBox.style.background = '#eff6ff';
+        });
+
+        this.uploadBox.addEventListener('dragleave', () => {
+            this.uploadBox.style.borderColor = '#d1d5db';
+            this.uploadBox.style.background = '#f9fafb';
+        });
+
+        this.uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.uploadBox.style.borderColor = '#d1d5db';
+            this.uploadBox.style.background = '#f9fafb';
+            
+            if (e.dataTransfer.files.length) {
+                this.fileInput.files = e.dataTransfer.files;
+                this.handleFileUpload({ target: this.fileInput });
+            }
+        });
+    }
+
+    async handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.type !== 'application/pdf') {
+            CustomModal.fire('Error', 'Please select a valid PDF file.', 'error');
+            return;
+        }
+
+        this.uploadBox.classList.add('hidden');
+        this.loadingState.classList.remove('hidden');
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `uploads/${fileName}`;
+
+            const { error: uploadError } = await this.supabase.storage
+                .from('pdfs')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data, error: functionError } = await this.supabase.functions.invoke('process-pdf', {
+                body: { filePath: filePath }
+            });
+
+            if (functionError) {
+                const errDetails = await functionError.context?.json().catch(() => null);
+                console.error("Edge Function Error Details:", JSON.stringify(errDetails, null, 2));
+                throw functionError;
+            }
+
+            this.displayNotes(data.notesHtml);
+
+        } catch (error) {
+            console.error('Error processing PDF:', error);
+            CustomModal.fire('Error', 'Failed to process the PDF. Please try again.', 'error');
+            this.resetState();
+        }
+    }
+
+    displayNotes(htmlContent) {
+        this.loadingState.classList.add('hidden');
+        this.notesResult.classList.remove('hidden');
+        this.notesContent.innerHTML = htmlContent;
+    }
+
+    resetState() {
+        this.fileInput.value = '';
+        this.uploadBox.classList.remove('hidden');
+        this.loadingState.classList.add('hidden');
+        this.notesResult.classList.add('hidden');
+        this.notesContent.innerHTML = '';
+    }
+
+    exportAsPdf() {
+        const content = this.notesContent;
+        if (!content || !content.innerHTML.trim()) {
+            CustomModal.fire('No Notes', 'There are no notes to export yet.', 'warning');
+            return;
+        }
+
+        const clone = document.createElement('div');
+        clone.innerHTML = content.innerHTML;
+        clone.style.cssText = 'font-family: Inter, sans-serif; color: #1a1a1a; padding: 20px; line-height: 1.6; column-count: 2; column-gap: 24px; column-rule: 1px solid #ddd; font-size: 11px;';
+
+        clone.querySelectorAll('.slide-section').forEach(el => {
+            el.style.cssText = 'break-inside: avoid; margin-bottom: 10px; padding-bottom: 6px;';
+        });
+        clone.querySelectorAll('hr').forEach(el => {
+            el.style.cssText = 'border: none; border-top: 1px dashed #ccc; margin: 8px 0;';
+        });
+        clone.querySelectorAll('h3').forEach(el => {
+            el.style.cssText = 'font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #2d2d2d; border-bottom: 1.5px solid #7a9a7e; padding-bottom: 4px; break-after: avoid;';
+        });
+        clone.querySelectorAll('h4').forEach(el => {
+            el.style.cssText = 'font-size: 12px; font-weight: 600; margin-top: 8px; margin-bottom: 4px; color: #3a5a3e; break-after: avoid;';
+        });
+        clone.querySelectorAll('ul, ol').forEach(el => {
+            el.style.cssText = 'margin-left: 14px; margin-bottom: 6px;';
+        });
+        clone.querySelectorAll('li').forEach(el => {
+            el.style.cssText = 'margin-bottom: 3px; font-size: 11px;';
+        });
+        clone.querySelectorAll('strong').forEach(el => {
+            el.style.cssText = 'color: #2d4a31;';
+        });
+
+        const opt = {
+            margin: [10, 12, 10, 12],
+            filename: 'study-notes.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.width = '770px';
+        document.body.appendChild(clone);
+
+        html2pdf().set(opt).from(clone).save().then(() => {
+            document.body.removeChild(clone);
+            CustomModal.showToast({ title: 'PDF exported successfully!', icon: 'success', timer: 3000 });
+        }).catch(err => {
+            document.body.removeChild(clone);
+            console.error('Export error:', err);
+            CustomModal.fire('Export Failed', 'Could not export the PDF. Please try again.', 'error');
+        });
+    }
+}
+
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize main app
     const app = new StudyTechniquesApp();
-    
-    // Initialize all technique systems
     const pomodoroTimer = new PomodoroTimer();
-    const flashcardsSystem = new FlashcardsSystem();
-    const spacedRepetitionSystem = new SpacedRepetitionSystem();
-    const activeRecallSystem = new ActiveRecallSystem();
-    const mindMapSystem = new MindMapSystem();
-    const cornellNotesSystem = new CornellNotesSystem();
+    const pdfNotesSystem = new PdfNotesSystem();
     
-    // Request notification permission for Pomodoro timer
     PomodoroTimer.requestNotificationPermission();
     
-    // Global error handling
     window.addEventListener('error', (event) => {
         console.error('Application error:', event.error);
     });
     
-    // Prevent data loss on page unload
     window.addEventListener('beforeunload', (event) => {
         app.saveTechnique();
     });
