@@ -673,10 +673,142 @@ class PdfNotesSystem {
 }
 
 // Initialize the application when DOM is loaded
+
+class FlashcardSystem {
+    constructor() {
+        this.cards = [];
+        this.currentIndex = 0;
+        
+        // DOM Elements
+        this.emptyState = document.getElementById('flashcard-empty-state');
+        this.player = document.getElementById('flashcard-player');
+        this.cardElement = document.getElementById('flashcard-card');
+        this.sceneElement = document.getElementById('flashcard-scene');
+        this.frontText = document.getElementById('flashcard-front-text');
+        this.backText = document.getElementById('flashcard-back-text');
+        this.currentIdxEl = document.getElementById('current-card-idx');
+        this.totalCardsEl = document.getElementById('total-cards');
+        
+        this.prevBtn = document.getElementById('prev-card-btn');
+        this.nextBtn = document.getElementById('next-card-btn');
+        this.convertBtn = document.getElementById('convert-flashcards-btn');
+        
+        if (this.sceneElement) {
+            this.setupEventListeners();
+        }
+    }
+    
+    setupEventListeners() {
+        this.sceneElement.addEventListener('click', () => {
+            if (this.cards.length > 0) {
+                this.cardElement.classList.toggle('is-flipped');
+            }
+        });
+        
+        this.prevBtn.addEventListener('click', () => this.navigate(-1));
+        this.nextBtn.addEventListener('click', () => this.navigate(1));
+        
+        if (this.convertBtn) {
+            this.convertBtn.addEventListener('click', () => this.extractFromNotes());
+        }
+    }
+    
+    extractFromNotes() {
+        const notesContent = document.getElementById('generated-notes-content');
+        if (!notesContent || !notesContent.innerHTML.trim()) {
+            CustomModal.fire('No Notes', 'Generate notes from a PDF first!', 'warning');
+            return;
+        }
+        
+        this.cards = [];
+        
+        // Parse the notes structure
+        // We look for h3/h4 as Front, and everything up to the next h3/h4/hr as Back.
+        const children = Array.from(notesContent.children);
+        let currentCard = null;
+        
+        for (let i = 0; i < children.length; i++) {
+            const el = children[i];
+            const tagName = el.tagName.toLowerCase();
+            
+            if (tagName === 'h3' || tagName === 'h4') {
+                // Save previous card if it has front and back
+                if (currentCard && currentCard.front && currentCard.backHtml.trim()) {
+                    this.cards.push(currentCard);
+                }
+                
+                // Start a new card
+                currentCard = {
+                    front: el.innerText.trim(),
+                    backHtml: ''
+                };
+            } else if (tagName !== 'hr') {
+                if (currentCard) {
+                    currentCard.backHtml += el.outerHTML;
+                }
+            }
+        }
+        
+        // Push the last card
+        if (currentCard && currentCard.front && currentCard.backHtml.trim()) {
+            this.cards.push(currentCard);
+        }
+        
+        if (this.cards.length === 0) {
+            CustomModal.fire('Extraction Failed', 'Could not find proper structure in the notes to create flashcards.', 'error');
+            return;
+        }
+        
+        CustomModal.fire('Success', `Created ${this.cards.length} flashcards from your notes!`, 'success').then(() => {
+            // Switch to Flashcards tab
+            document.getElementById('flashcards-btn').click();
+            this.startSession();
+        });
+    }
+    
+    startSession() {
+        if (this.cards.length === 0) {
+            this.emptyState.classList.remove('hidden');
+            this.player.classList.add('hidden');
+            return;
+        }
+        
+        this.currentIndex = 0;
+        this.emptyState.classList.add('hidden');
+        this.player.classList.remove('hidden');
+        this.totalCardsEl.textContent = this.cards.length;
+        this.showCard();
+    }
+    
+    showCard() {
+        const card = this.cards[this.currentIndex];
+        this.cardElement.classList.remove('is-flipped');
+        
+        // Wait for unflip animation before changing content
+        setTimeout(() => {
+            this.frontText.textContent = card.front;
+            this.backText.innerHTML = card.backHtml;
+            this.currentIdxEl.textContent = this.currentIndex + 1;
+            
+            this.prevBtn.disabled = this.currentIndex === 0;
+            this.nextBtn.disabled = this.currentIndex === this.cards.length - 1;
+        }, 150);
+    }
+    
+    navigate(dir) {
+        const newIndex = this.currentIndex + dir;
+        if (newIndex >= 0 && newIndex < this.cards.length) {
+            this.currentIndex = newIndex;
+            this.showCard();
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const app = new StudyTechniquesApp();
     const pomodoroTimer = new PomodoroTimer();
     const pdfNotesSystem = new PdfNotesSystem();
+    const flashcardSystem = new FlashcardSystem();
     
     PomodoroTimer.requestNotificationPermission();
     
