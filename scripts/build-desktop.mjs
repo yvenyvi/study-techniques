@@ -26,7 +26,10 @@ try {
     const config = join(directory, "updater.json");
     writeFileSync(
       config,
-      JSON.stringify({ bundle: { createUpdaterArtifacts: true } }),
+      JSON.stringify({
+        bundle: { createUpdaterArtifacts: true },
+        plugins: { updater: { pubkey: publicKey } },
+      }),
     );
     args.push("--config", config);
   }

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile, readFile, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { prepareDesktopRelease } from "../scripts/prepare-desktop-release.mjs";
 
@@ -77,3 +79,42 @@ test("ambiguous installers cannot be published", () =>
     await writeFile(join(options.bundleDir, "older-setup.exe"), "old");
     await assert.rejects(prepareDesktopRelease(options), /exactly one/);
   }));
+
+test("signed build passes the verification key to the bundler and requires complete credentials", async () => {
+  const root = await mkdtemp(join(tmpdir(), "study-build-config-"));
+  const cli = join(root, "node_modules/@tauri-apps/cli");
+  const script = fileURLToPath(
+    new URL("../scripts/build-desktop.mjs", import.meta.url),
+  );
+  try {
+    await mkdir(cli, { recursive: true });
+    await writeFile(
+      join(cli, "tauri.js"),
+      `const fs = require('node:fs'); const i = process.argv.indexOf('--config'); console.log(fs.readFileSync(process.argv[i + 1], 'utf8'));`,
+    );
+    const env = {
+      ...process.env,
+      STUDY_ROOM_REQUIRE_UPDATER: "1",
+      STUDY_ROOM_UPDATER_PUBLIC_KEY: "test-public-key",
+      TAURI_SIGNING_PRIVATE_KEY: "test-private-key",
+    };
+    const result = spawnSync(process.execPath, [script, "--bundles", "nsis"], {
+      cwd: root,
+      env,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const config = JSON.parse(result.stdout);
+    assert.equal(config.bundle.createUpdaterArtifacts, true);
+    assert.equal(config.plugins.updater.pubkey, "test-public-key");
+    const missing = spawnSync(process.execPath, [script], {
+      cwd: root,
+      env: { ...env, TAURI_SIGNING_PRIVATE_KEY: "" },
+      encoding: "utf8",
+    });
+    assert.equal(missing.status, 1);
+    assert.match(missing.stderr, /Signed releases require both/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
