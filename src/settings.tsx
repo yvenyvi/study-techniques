@@ -7,6 +7,7 @@ import { flushEditors } from "./shared";
 import { backup, restore, download } from "./backup";
 import { PageTitle, report } from "./shared";
 import { Download, Upload } from "lucide-react";
+import { saveFocusPreferences } from "./timer-preferences";
 export function Settings({ ready }: { ready: boolean }) {
   const settings = useLiveQuery(() => db.settings.get("preferences"), []);
   const [focus, setFocus] = useState(25);
@@ -16,12 +17,22 @@ export function Settings({ ready }: { ready: boolean }) {
   const [storagePath, setStoragePath] = useState("");
   const [persistent, setPersistent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
+  const savedFocus = settings?.value.focus;
+  const savedRest = settings?.value.rest;
+  const savedSound = settings?.value.sound;
   useEffect(() => {
-    if (settings) {
-      setFocus(settings.value.focus);
-      setRest(settings.value.rest);
-      setSound(settings.value.sound);
+    if (
+      savedFocus !== undefined &&
+      savedRest !== undefined &&
+      savedSound !== undefined
+    ) {
+      setFocus(savedFocus);
+      setRest(savedRest);
+      setSound(savedSound);
     }
+  }, [savedFocus, savedRest, savedSound]);
+  useEffect(() => {
     if (isDesktop) {
       nativeInvoke<string>("storage_location")
         .then(setStoragePath)
@@ -30,7 +41,7 @@ export function Settings({ ready }: { ready: boolean }) {
     }
     navigator.storage?.estimate().then(setEstimate);
     navigator.storage?.persisted().then(setPersistent);
-  }, [settings]);
+  }, []);
   return (
     <>
       <PageTitle
@@ -44,11 +55,17 @@ export function Settings({ ready }: { ready: boolean }) {
           className="inline-form"
           onSubmit={async (e) => {
             e.preventDefault();
-            await db.settings.put({
-              id: "preferences",
-              value: { focus, rest, sound },
-            });
-            report("Preferences saved.");
+            setSavingPreferences(true);
+            try {
+              await saveFocusPreferences(db, { focus, rest, sound });
+              report(
+                "Preferences saved. Idle timers updated; sessions in progress keep their remaining time.",
+              );
+            } catch (error) {
+              report(error);
+            } finally {
+              setSavingPreferences(false);
+            }
           }}
         >
           <label>
@@ -81,8 +98,15 @@ export function Settings({ ready }: { ready: boolean }) {
             />
             Completion sound
           </label>
-          <button>Save preferences</button>
+          <button disabled={savingPreferences}>
+            {savingPreferences ? "Saving…" : "Save preferences"}
+          </button>
         </form>
+        <p className="small muted">
+          Saved durations apply immediately to timers you haven’t started.
+          Running or paused sessions keep their remaining time; the new
+          durations apply to the next focus session or break.
+        </p>
         {!isDesktop && (
           <button
             className="secondary"

@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import { db, secondsLeft, uid, type Timer } from "./data";
 import { report } from "./shared";
+import {
+  applyTimerPreferences,
+  defaultFocusPreferences,
+} from "./timer-preferences";
 export function FocusTimer() {
   const stored = useLiveQuery(() => db.timers.get("active"), []);
   const preferences = useLiveQuery(() => db.settings.get("preferences"), []);
@@ -20,7 +24,7 @@ export function FocusTimer() {
   const [note, setNote] = useState("");
   const [complete, setComplete] = useState(false);
   const handled = useRef("");
-  const prefs = preferences?.value || { focus: 25, rest: 5, sound: false };
+  const prefs = preferences?.value || defaultFocusPreferences;
   const fresh = (): Timer => ({
     id: "active",
     phase: "focus",
@@ -31,10 +35,10 @@ export function FocusTimer() {
     started: 0,
     elapsed: 0,
   });
-  const t = stored || fresh();
+  const t = applyTimerPreferences(stored || fresh(), prefs);
   const remaining = secondsLeft(t, now);
-  const total = (t.phase === "focus" ? prefs.focus : prefs.rest) * 60;
-  const fraction = Math.min(1, remaining / total);
+  const total = t.elapsed + t.remaining;
+  const fraction = total > 0 ? Math.min(1, remaining / total) : 0;
   const current = useRef(t);
   current.current = t;
   useEffect(() => {
@@ -229,8 +233,8 @@ export function FocusTimer() {
               </select>
             </label>
             <p className="small muted">
-              Focus {prefs.focus} min · Break {prefs.rest} min · Transitions
-              start when you’re ready.
+              Preferences: Focus {prefs.focus} min · Break {prefs.rest} min ·
+              Transitions start when you’re ready.
             </p>
             <div className="actions">
               {t.started && t.phase === "focus" && (
@@ -262,6 +266,7 @@ export function FocusTimer() {
               {!t.started && t.phase === "focus" && (
                 <button
                   className="text-button"
+                  disabled={!owner}
                   onClick={() =>
                     db.timers
                       .put({ ...fresh(), goalId: t.goalId })

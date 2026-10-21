@@ -5,6 +5,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { resolve, join } from "node:path";
 import { access, mkdir, readdir } from "node:fs/promises";
 import { pdf } from "../tests-desktop/pdf.mjs";
+import { checkTimerPreferences } from "../tests/timer-preferences-flow.mjs";
 if (process.platform !== "win32")
   throw Error("This smoke check requires Windows.");
 const executable =
@@ -183,9 +184,10 @@ try {
   await expect(
     page.getByRole("button", { name: "Request persistent storage" }),
   ).toHaveCount(0);
+  await checkTimerPreferences(page);
   await close(page);
   console.log(
-    "Actual Windows app: install, PDF import/render, native note save, reopen, and storage controls passed.",
+    "Actual Windows app: install, PDF import/render, native note save, reopen, storage controls, and timer preferences passed.",
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

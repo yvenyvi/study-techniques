@@ -8,6 +8,7 @@ import { backup, restore } from "../src/backup";
 import { StudyDB } from "../src/data";
 import { webStore } from "../src/storage/store";
 import { openBridge } from "./bridge";
+import { saveFocusPreferences } from "../src/timer-preferences";
 let folder: string;
 let bridge: ReturnType<typeof openBridge>;
 let db: DesktopStore;
@@ -49,6 +50,33 @@ afterEach(async () => {
   await rm(folder, { recursive: true, force: true });
 });
 describe("real SQLite and PDF storage", () => {
+  it("persists preferences and an updated idle timer together without changing an active session", async () => {
+    await db.timers.put({
+      id: "active",
+      phase: "focus",
+      running: false,
+      deadline: 0,
+      remaining: 1500,
+      goalId: "g",
+      started: 0,
+      elapsed: 0,
+    });
+    await saveFocusPreferences(db, { focus: 45, rest: 12, sound: true });
+    await bridge.invoke("reopen");
+    const reopened = new DesktopStore(bridge.invoke);
+    expect((await reopened.settings.get("preferences"))?.value.focus).toBe(45);
+    expect((await reopened.timers.get("active"))?.remaining).toBe(2700);
+    await reopened.timers.update("active", {
+      started: 100,
+      remaining: 2600,
+      elapsed: 100,
+    });
+    await saveFocusPreferences(reopened, { focus: 30, rest: 7, sound: false });
+    await bridge.invoke("reopen");
+    const resumed = new DesktopStore(bridge.invoke);
+    expect((await resumed.timers.get("active"))?.remaining).toBe(2600);
+    expect((await resumed.settings.get("preferences"))?.value.focus).toBe(30);
+  });
   it("persists without IndexedDB, reads PDFs lazily, and keeps notes after PDF deletion", async () => {
     await db.documents.add(document());
     await db.notes.add(note("n"));
