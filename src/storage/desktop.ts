@@ -94,7 +94,9 @@ export class DesktopStore implements StudyStore {
   }
   close() {}
   async settle() {
-    await this.coordinator.queue;
+    // Drain writes on exit. Failed operations already report to their caller;
+    // editor flushing separately prevents closing with an unsaved draft.
+    await this.coordinator.queue.catch(() => {});
   }
   private enqueue<T>(run: () => Promise<T>): Promise<T> {
     const next = this.coordinator.queue.catch(() => {}).then(run);

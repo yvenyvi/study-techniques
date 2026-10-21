@@ -104,6 +104,7 @@ describe("real SQLite and PDF storage", () => {
         await tx.documents.add({ ...document(), blob: new Blob(["not PDF"]) });
       }),
     ).rejects.toThrow("Invalid PDF");
+    await expect(db.settle()).resolves.toBeUndefined();
     expect(await db.notes.count()).toBe(1);
     expect(await db.documents.count()).toBe(0);
     await bridge.invoke("reopen");
