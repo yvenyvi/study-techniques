@@ -1,188 +1,367 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus & Notes</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="includes/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-</head>
-<body>
-    <header>
-        <h1><i data-lucide="heart-handshake" class="header-icon"></i> My Love Focusing App</h1>
-        <p>Made only for my love to boost her learning efficiency!</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#35594b" />
+    <meta
+      name="description"
+      content="A quieter place to study. Keep your PDFs, notes, psychology reviewers, and focus goals together in an offline study workspace."
+    />
+    <meta
+      property="og:title"
+      content="Study Room — Make room for understanding."
+    />
+    <meta
+      property="og:description"
+      content="Your readings, your notes, your next small goal. An offline study workspace, made for thoughtful learning."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="stylesheet" href="/src/landing.css" />
+    <title>Study Room — Make room for understanding.</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header wrap">
+      <a class="wordmark" href="/" aria-label="Study Room home"
+        ><img src="/icon.svg" width="34" height="34" alt="" />study room<span
+          >.</span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#how-it-works">The workspace</a
+        ><a href="#install">Get the app</a
+        ><a class="button small-button" href="/app/"
+          >Open Study Room <span aria-hidden="true">↗︎</span></a
+        >
+      </nav>
     </header>
-
-    <main>
-        <div class="technique-selector">
-            <h2>Select a Tool</h2>
-            <div class="technique-grid">
-                <button class="technique-btn" data-technique="pomodoro">
-                    <i data-lucide="timer"></i>
-                    <span>Pomodoro Timer</span>
-                </button>
-                <!-- PDF to Notes Button -->
-                <button class="technique-btn" data-technique="pdf-notes" id="pdf-notes-btn">
-                    <i data-lucide="file-text"></i>
-                    <span>PDF to Notes</span>
-                </button>
-                <!-- Flashcards Button -->
-                <button class="technique-btn" data-technique="flashcards" id="flashcards-btn">
-                    <i data-lucide="layers"></i>
-                    <span>Flashcards</span>
-                </button>
-            </div>
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="live-dot"></span>A LITTLE SPACE. A LITTLE MORE FOCUS.
+          </p>
+          <h1 id="hero-title">Make room for<br /><em>understanding.</em></h1>
+          <p class="hero-description">
+            From a pile of readings to a reviewer that makes sense. Bring your
+            PDFs, notes, and study goals into one quiet workspace.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="/app/"
+              >Find your focus <span aria-hidden="true">↗︎</span></a
+            ><a class="text-link" href="#how-it-works"
+              >Take a look inside <span aria-hidden="true">↓</span></a
+            >
+          </div>
+          <p class="hero-footnote">
+            No account to create. No AI limits to work around.<br />Just you,
+            your materials, and a place to begin.
+          </p>
         </div>
-
-        <div class="technique-container">
-            <!-- PDF to Notes -->
-            <div id="pdf-notes" class="technique-panel hidden">
-                <h3><i data-lucide="file-text"></i> PDF to Notes</h3>
-                <p>Upload a PDF document and instantly get structured, easy-to-understand notes using AI.</p>
-                
-                <div class="pdf-upload-container">
-                    <div class="upload-box">
-                        <i data-lucide="upload-cloud" class="upload-icon"></i>
-                        <h4>Upload your PDF</h4>
-                        <p>Drag and drop your file here, or click to browse</p>
-                        <input type="file" id="pdf-file-input" accept=".pdf" class="hidden">
-                        <button class="btn-primary" onclick="document.getElementById('pdf-file-input').click()">Select File</button>
-                    </div>
-                    
-                    <div id="pdf-loading-state" class="hidden">
-                        <i data-lucide="loader-2" class="spin-icon"></i>
-                        <p>Processing your document and generating notes... This might take a moment.</p>
-                    </div>
-
-                    <div id="pdf-notes-result" class="hidden">
-                        <h4>Generated Notes</h4>
-                        <div class="notes-content" id="generated-notes-content">
-                            <!-- Notes will be inserted here -->
-                        </div>
-                        <div class="notes-actions">
-                            <button class="btn-primary" id="export-pdf-btn">
-                                <i data-lucide="download"></i>
-                                <span>Export as PDF</span>
-                            </button>
-                            <button class="btn-primary" id="convert-flashcards-btn" style="background-color: #f6ad55; border-color: #f6ad55; color: white;">
-                                <i data-lucide="layers"></i>
-                                <span>Make Flashcards</span>
-                            </button>
-                            <button class="btn-secondary" id="reset-pdf-btn">Process Another PDF</button>
-                        </div>
-                    </div>
-                </div>
+        <div
+          class="hero-scene"
+          role="img"
+          aria-label="Example study session: a psychology reading beside a note comparing working memory and short-term memory, with a 25-minute focus goal."
+        >
+          <div class="scene-label"><span>✳</span> A GOOD PLACE TO START</div>
+          <div class="reading-sheet">
+            <div class="paper-top">
+              <span>COGNITIVE PSYCHOLOGY</span><span>04</span>
             </div>
-
-            <!-- Flashcards Panel -->
-            <div id="flashcards" class="technique-panel hidden">
-                <h3><i data-lucide="layers"></i> Flashcards</h3>
-                <p>Review your notes through active recall.</p>
-                <div id="flashcards-container">
-                    <div class="empty-state" id="flashcard-empty-state">
-                        <p>No flashcards generated yet. Generate notes from a PDF, or paste your own notes below.</p>
-                        
-                        <div class="manual-flashcards-input" style="margin-top: 20px; text-align: left;">
-                            <div class="pdf-upload-container">
-                                <div class="upload-box" id="local-pdf-upload-box">
-                                    <i data-lucide="upload-cloud" class="upload-icon"></i>
-                                    <h4>Upload PDF for Offline Flashcards</h4>
-                                    <p>Your file won't be sent to any server. Processed locally.</p>
-                                    <input type="file" id="local-pdf-file-input" accept=".pdf" class="hidden">
-                                    <button class="btn-primary" style="background-color: #f6ad55; border-color: #f6ad55;" onclick="document.getElementById('local-pdf-file-input').click()">Select PDF File</button>
-                                </div>
-                                <div id="local-pdf-loading-state" class="hidden" style="text-align: center; padding: 20px;">
-                                    <i data-lucide="loader-2" class="spin-icon"></i>
-                                    <p>Extracting text from PDF...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flashcard-player hidden" id="flashcard-player">
-                        <div class="flashcard-counter">
-                            <span id="current-card-idx">1</span> / <span id="total-cards">0</span>
-                        </div>
-                        <div class="flashcard-scene" id="flashcard-scene">
-                            <div class="flashcard" id="flashcard-card">
-                                <div class="flashcard-face flashcard-front">
-                                    <h4 id="flashcard-front-text">Question</h4>
-                                    <span class="flip-hint">Click to reveal</span>
-                                </div>
-                                <div class="flashcard-face flashcard-back">
-                                    <div id="flashcard-back-text">Answer</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flashcard-controls">
-                            <button class="btn-secondary" id="prev-card-btn"><i data-lucide="chevron-left"></i> Previous</button>
-                            <button class="btn-primary" id="next-card-btn">Next <i data-lucide="chevron-right"></i></button>
-                        </div>
-                    </div>
-                </div>
+            <h2>A little about<br />working memory.</h2>
+            <div class="paper-rule"></div>
+            <p>How do we hold information in mind while we think?</p>
+            <div class="paper-lines">
+              <i></i><i></i><i class="highlight"></i><i></i><i></i>
             </div>
-
-            <!-- Pomodoro Timer -->
-            <div id="pomodoro" class="technique-panel hidden">
-                <h3>🍅 Pomodoro Timer</h3>
-                <p>Work in focused 25-minute intervals with 5-minute breaks</p>
-                <div class="timer-display">
-                    <div class="timer-circle">
-                        <span id="timer-text">25:00</span>
-                    </div>
-                </div>
-                <div class="timer-controls">
-                    <button id="start-timer" class="btn-primary">Start</button>
-                    <button id="pause-timer" class="btn-secondary">Pause</button>
-                    <button id="reset-timer" class="btn-secondary">Reset</button>
-                </div>
-                <div class="timer-settings">
-                    <label>Work: <input type="number" id="work-minutes" value="25" min="5" max="60"> minutes</label>
-                    <label>Break: <input type="number" id="break-minutes" value="5" min="5" max="30"> minutes</label>
-                </div>
-                <div class="session-info">
-                    <p>Session: <span id="session-count">1</span> | Type: <span id="session-type">Work</span></p>
-                </div>
+            <p class="paper-quote">
+              A temporary space for information we’re actively using.
+            </p>
+            <div class="paper-lines"><i></i><i></i><i></i></div>
+            <span class="paper-bottom">YOUR READING, IN REACH.</span>
+          </div>
+          <div class="note-sheet">
+            <div class="note-top">
+              <span>✎</span> My own words <span class="saved-dot">✓ Saved</span>
             </div>
-
+            <h3>Hold it. Work with it.</h3>
+            <p>
+              Short-term memory holds information.<br /><mark
+                >Working memory helps us use it.</mark
+              >
+            </p>
+            <div class="note-check">✓ &nbsp;Add an everyday example</div>
+            <div class="source-pill">↗︎ Reading · page 4</div>
+          </div>
+          <div class="focus-card">
+            <div class="focus-dial">25<span>MIN</span></div>
+            <div>
+              <span class="eyebrow">ONE SMALL GOAL</span
+              ><strong>Compare two memory models</strong
+              ><span class="focus-caption"
+                >Understand it. Then take a breath.</span
+              >
+            </div>
+          </div>
+          <span class="scene-caption"
+            >An example of your next study session.</span
+          ><span class="scene-spark" aria-hidden="true">✳</span>
         </div>
+      </section>
+      <div class="principles">
+        <div class="wrap">
+          <span>Made with psychology students in mind</span
+          ><span>Works offline after setup</span
+          ><span>Your files stay on your device</span>
+        </div>
+      </div>
+      <section
+        id="how-it-works"
+        class="workflow wrap"
+        aria-labelledby="workflow-title"
+      >
+        <div class="section-heading">
+          <p class="eyebrow">LESS SCATTERED. MORE CONNECTED.</p>
+          <h2 id="workflow-title">
+            A place for every part<br />of your study session.
+          </h2>
+          <p>
+            Keep the path from “I need to study” to “I understand this” a little
+            clearer.
+          </p>
+        </div>
+        <div class="steps">
+          <article>
+            <span class="step-number">01 / GATHER</span>
+            <div class="step-symbol" aria-hidden="true">▤</div>
+            <h3>Give your readings a home.</h3>
+            <p>
+              Organize PDFs and notes by course. Find the material you need and
+              pick up where you left off.
+            </p>
+          </article>
+          <article>
+            <span class="step-number">02 / MAKE SENSE OF IT</span>
+            <div class="step-symbol" aria-hidden="true">✎</div>
+            <h3>Put it in your own words.</h3>
+            <p>
+              Read and take notes side by side. Bring over a passage with its
+              page reference, then build your own reviewer.
+            </p>
+          </article>
+          <article>
+            <span class="step-number">03 / FINISH SOMETHING</span>
+            <div class="step-symbol" aria-hidden="true">◴</div>
+            <h3>Focus on a clear next step.</h3>
+            <p>
+              Define what “finished” looks like, start a focus timer, and
+              reflect on your progress. You decide when the goal is done.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="reviewer-section wrap" aria-labelledby="reviewer-title">
+        <div class="reviewer-example">
+          <div class="example-label">
+            EXAMPLE REVIEWER / COGNITIVE PSYCHOLOGY
+          </div>
+          <h3>Make connections.<br />Not just highlights.</h3>
+          <div class="comparison">
+            <div><span>CONCEPT</span><strong>Working memory</strong></div>
+            <div>
+              <span>IN MY OWN WORDS</span>
+              <p>A mental workspace for holding and using information.</p>
+            </div>
+            <div>
+              <span>EVERYDAY EXAMPLE</span>
+              <p>Following directions while remembering where to turn next.</p>
+            </div>
+          </div>
+          <div class="practice-example">
+            <span>SELF-CHECK</span>
+            <p>How is this different from short-term memory?</p>
+            <small>Think first. Reveal the answer in practice.</small>
+          </div>
+        </div>
+        <div class="reviewer-copy">
+          <p class="eyebrow">UNDERSTANDING TAKES YOUR OWN WORDS.</p>
+          <h2 id="reviewer-title">
+            A reviewer that<br />sounds like <em>you.</em>
+          </h2>
+          <p>
+            Start with concepts, compare theories, summarize research, or write
+            practice questions. Templates give your thinking a structure, and
+            source links keep your readings close.
+          </p>
+          <ul class="feature-list">
+            <li>Read PDFs beside autosaved rich notes</li>
+            <li>Practice questions with hidden answers</li>
+            <li>Print notes and reviewers, or save as PDF</li>
+          </ul>
+          <a class="text-link" href="/app/reviewers"
+            >Build your first reviewer <span aria-hidden="true">↗︎</span></a
+          >
+        </div>
+      </section>
+      <section class="offline-section">
+        <div class="wrap offline-inner">
+          <div class="offline-illustration" aria-hidden="true">
+            <span>⌁</span><span class="offline-book">▤</span><span>✎</span>
+            <div>
+              YOUR STUDY SPACE<br /><strong>Still here. Even offline.</strong>
+            </div>
+          </div>
+          <div>
+            <p class="eyebrow">THE CONNECTION CAN WAIT.</p>
+            <h2>Your next study spot<br />doesn’t need Wi-Fi.</h2>
+            <p>
+              Open the web app online once and wait for “Ready for offline
+              study.” Your saved readings, notes, reviewers, and focus tools
+              will be there when you disconnect.
+            </p>
+            <p class="fine-print">
+              Your materials are stored in this browser on this device. Export a
+              backup in Settings regularly. Web and native apps use manual ZIP
+              transfer; they don’t sync automatically.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section
+        id="install"
+        class="install-section wrap"
+        aria-labelledby="install-title"
+      >
+        <div class="section-heading">
+          <p class="eyebrow">A SPACE THAT GOES WITH YOU.</p>
+          <h2 id="install-title">Make yourself at home.</h2>
+          <p>
+            Start in your browser today. Add the web app to your Home Screen for
+            easy access.
+          </p>
+        </div>
+        <div class="download-options">
+          <article class="download-card available">
+            <div class="download-card-top">
+              <span class="platform-icon" aria-hidden="true">↗︎</span
+              ><span class="availability">AVAILABLE NOW</span>
+            </div>
+            <h3>Study Room for the web</h3>
+            <p>
+              For your laptop, iPad, or phone. No installer or account needed.
+            </p>
+            <a class="button" href="/app/"
+              >Open web app <span aria-hidden="true">↗︎</span></a
+            ><a class="text-link install-help-link" href="#install-guide"
+              >How to install on your device
+              <span aria-hidden="true">↓</span></a
+            >
+          </article>
+          <article class="download-card native">
+            <div class="download-card-top">
+              <span class="platform-icon tablet-icon" aria-hidden="true">▯</span
+              ><span class="availability">IN DEVELOPMENT</span>
+            </div>
+            <h3>Made for iPad</h3>
+            <p>
+              A Flutter companion with typed notes, Apple Pencil Scribble
+              support, and local storage.
+            </p>
+            <span class="coming-soon">Native iPad download coming soon</span>
+            <p class="release-note">
+              A signed iPad release isn’t available yet. You can use the web app
+              on your iPad now.
+            </p>
+          </article>
+        </div>
+        <div id="install-guide" class="install-guide">
+          <h3>A small shortcut to a calmer session.</h3>
+          <div class="install-instructions">
+            <div>
+              <h4>On iPad or iPhone</h4>
+              <p>
+                Open <a href="/app/">the web app</a> in Safari. Tap
+                <strong>Share → Add to Home Screen</strong>, then Add. Launch it
+                from your Home Screen and wait for the offline-ready message.
+              </p>
+            </div>
+            <div>
+              <h4>On your computer</h4>
+              <p>
+                Open <a href="/app/">the web app</a> in Chrome or Edge. Choose
+                the browser’s install option in the address bar or menu. You can
+                also keep using it in a tab.
+              </p>
+            </div>
+          </div>
+          <p class="fine-print">
+            Installation options depend on your browser. The installed app keeps
+            its own local workspace on some devices; export and restore a ZIP to
+            move existing work.
+          </p>
+        </div>
+      </section>
+      <section class="faq wrap" aria-labelledby="faq-title">
+        <div>
+          <p class="eyebrow">BEFORE YOU SETTLE IN</p>
+          <h2 id="faq-title">A few good<br />things to know.</h2>
+        </div>
+        <div class="faq-questions">
+          <details>
+            <summary>Will this automatically turn a PDF into notes?</summary>
+            <p>
+              You choose the passages that matter and add them to your notes
+              with a page reference. Study Room doesn’t generate AI summaries.
+              Scanned PDFs can be read, but text selection needs a PDF with
+              selectable text; OCR isn’t included.
+            </p>
+          </details>
+          <details>
+            <summary>Where do my notes and files go?</summary>
+            <p>
+              They stay in your device’s browser storage, without an account or
+              cloud upload. Clearing site data can remove your work. Use
+              Settings to export a ZIP backup and keep it somewhere safe.
+            </p>
+          </details>
+          <details>
+            <summary>Can I move between the web and iPad app?</summary>
+            <p>
+              Both apps support the same version-1 ZIP backup format. When the
+              native app is released, you’ll be able to transfer backups
+              manually into an empty workspace. Automatic sync isn’t included.
+            </p>
+          </details>
+          <details>
+            <summary>Does finishing a timer complete my goal?</summary>
+            <p>
+              You decide when the goal is complete. The timer helps you focus
+              and record progress, but a good study session is about reaching
+              your defined outcome.
+            </p>
+          </details>
+        </div>
+      </section>
+      <section class="closing wrap">
+        <p class="eyebrow">ONE READING. ONE NOTE. ONE CLEAR GOAL.</p>
+        <h2>Your next small step<br />starts <em>here.</em></h2>
+        <a class="button" href="/app/"
+          >Open your study room <span aria-hidden="true">↗︎</span></a
+        >
+      </section>
     </main>
-
-    <!-- Custom Modal -->
-    <div id="custom-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Title</h3>
-            </div>
-            <div class="modal-body" id="modal-text">
-                Message
-            </div>
-            <div class="modal-footer" id="modal-buttons">
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Toast -->
-    <div id="custom-toast" class="toast hidden">
-        <span id="toast-icon"></span>
-        <span id="toast-text">Message</span>
-    </div>
-
-    <footer>
-        <p>&copy; 2025 Focus & Notes - Enhance your learning journey</p>
+    <footer class="site-footer wrap">
+      <a class="wordmark" href="/" aria-label="Study Room home"
+        ><img src="/icon.svg" width="28" height="28" alt="" />study room<span
+          >.</span
+        ></a
+      ><span>A quieter place to learn, at your pace.</span
+      ><a href="/app/settings"
+        >Your data & backups <span aria-hidden="true">↗︎</span></a
+      >
     </footer>
-
-    <script src="includes/app.js"></script>
-    <script>
-        lucide.createIcons();
-    </script>
-</body>
+  </body>
 </html>
