@@ -3,7 +3,8 @@
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { resolve, join } from "node:path";
-import { access, mkdir } from "node:fs/promises";
+import { access, mkdir, readdir } from "node:fs/promises";
+import { pdf } from "../tests-desktop/pdf.mjs";
 if (process.platform !== "win32")
   throw Error("This smoke check requires Windows.");
 const executable =
@@ -36,6 +37,12 @@ async function launch() {
   browser = await chromium.connectOverCDP("http://127.0.0.1:9222");
   const context = browser.contexts()[0];
   const page = context.pages()[0] || (await context.waitForEvent("page"));
+  page.on("pageerror", (error) =>
+    console.error("WebView2 page error:", error.message),
+  );
+  page.on("console", (message) => {
+    if (message.type() === "error") console.error("WebView2:", message.text());
+  });
   await expect(page.getByText("Desktop · saved on this computer")).toBeVisible({
     timeout: 30000,
   });
@@ -72,7 +79,16 @@ try {
     .getByRole("link", { name: "Library", exact: true })
     .first()
     .click();
-  await page.getByRole("button", { name: "New note", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "Windows native reading.pdf",
+    mimeType: "application/pdf",
+    buffer: pdf(),
+  });
+  await expect(page.locator(".textLayer")).toContainText(
+    "Working memory supports learning.",
+    { timeout: 15000 },
+  );
+  await page.getByRole("button", { name: "Create a note" }).click();
   await page.getByLabel("Note title").fill("Windows native smoke check");
   await page
     .locator(".tiptap")
@@ -89,6 +105,11 @@ try {
       "study-room.sqlite3",
     ),
   );
+  const pdfFiles = await readdir(
+    join(process.env.LOCALAPPDATA, "com.studyroom.desktop", "pdfs"),
+  );
+  if (pdfFiles.length !== 1 || !pdfFiles[0].endsWith(".pdf"))
+    throw Error("Native PDF file was not saved.");
   await mkdir("release", { recursive: true });
   await page.screenshot({ path: "release/desktop-smoke.png", fullPage: true });
   await close(page);
@@ -102,6 +123,10 @@ try {
     .click();
   await expect(page.locator(".tiptap")).toContainText(
     "actual Windows Tauri commands",
+  );
+  await expect(page.locator(".textLayer")).toContainText(
+    "Working memory supports learning.",
+    { timeout: 15000 },
   );
   const databases = await page.evaluate(() => indexedDB.databases());
   if (databases.length)
@@ -117,8 +142,26 @@ try {
   ).toHaveCount(0);
   await close(page);
   console.log(
-    "Actual Windows app: launch, native save, reopen, and storage controls passed.",
+    "Actual Windows app: install, PDF import/render, native note save, reopen, and storage controls passed.",
   );
+} catch (error) {
+  const page = browser?.contexts()[0]?.pages()[0];
+  if (page && !page.isClosed()) {
+    await mkdir("release", { recursive: true });
+    await page
+      .screenshot({ path: "release/desktop-smoke-failure.png", fullPage: true })
+      .catch(() => {});
+    console.error(
+      "Native page at failure:",
+      (
+        await page
+          .locator("body")
+          .innerText()
+          .catch(() => "unavailable")
+      ).slice(0, 5000),
+    );
+  }
+  throw error;
 } finally {
   if (browser?.isConnected()) await browser.close().catch(() => {});
   if (processHandle?.exitCode === null) processHandle.kill();

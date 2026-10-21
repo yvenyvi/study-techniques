@@ -40,5 +40,5 @@ jobs:
         if: always()
         with:
           name: Windows-installed-app-check
-          path: release/desktop-smoke.png
+          path: release/desktop-smoke*.png
           if-no-files-found: warn
