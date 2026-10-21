@@ -9,13 +9,19 @@ export async function checkTimerPreferences(page) {
     name: "Save preferences",
     exact: true,
   });
+  async function savePreferences() {
+    await save.click();
+    // Running/paused countdowns do not change when preferences are saved.
+    // Wait for the durable-save acknowledgement before reloading or editing again.
+    await expect(save).toBeEnabled();
+  }
   await page.getByRole("button", { name: "Expand focus timer" }).click();
   // Persist the old 25-minute timer, reproducing the original stale-state bug.
   await page.getByRole("button", { name: "Reset to preferences" }).click();
   await expect(time).toHaveText("25:00");
   await focus.fill("45");
   await rest.fill("12");
-  await save.click();
+  await savePreferences();
   await expect(time).toHaveText("45:00");
   await page.reload();
   await expect(time).toHaveText("45:00");
@@ -28,12 +34,12 @@ export async function checkTimerPreferences(page) {
   await expect(focus).toHaveValue("38");
   await focus.fill("35");
   await rest.fill("9");
-  await save.click();
+  await savePreferences();
   await expect(time).toHaveText(/^4[45]:\d{2}$/);
   await page.getByRole("button", { name: "Pause timer" }).click();
   const paused = await time.innerText();
   await focus.fill("32");
-  await save.click();
+  await savePreferences();
   await expect(time).toHaveText(paused);
   await page.reload();
   await expect(time).toHaveText(paused);
@@ -46,14 +52,14 @@ export async function checkTimerPreferences(page) {
     .click();
   await expect(time).toHaveText("09:00");
   await rest.fill("7");
-  await save.click();
+  await savePreferences();
   await expect(time).toHaveText("07:00");
   await page.getByRole("button", { name: "Start timer", exact: true }).click();
   await page.getByRole("button", { name: "Pause timer" }).click();
   const pausedBreak = await time.innerText();
   await focus.fill("30");
   await rest.fill("3");
-  await save.click();
+  await savePreferences();
   await expect(time).toHaveText(pausedBreak);
   await page.getByRole("button", { name: "Ready to focus" }).click();
   await expect(time).toHaveText("30:00");
