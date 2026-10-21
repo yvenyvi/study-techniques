@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Link,
   useNavigate,
@@ -150,6 +151,7 @@ function WorkspaceInner({ id }: { id: string }) {
     [id],
   );
   const [noteId, setNoteId] = useState("");
+  const [noteActions, setNoteActions] = useState<HTMLDivElement | null>(null);
   const [tab, setTab] = useState("pdf");
   const [ratio, setRatio] = useState(52);
   const [addition, setAddition] = useState<Ref>();
@@ -193,7 +195,6 @@ function WorkspaceInner({ id }: { id: string }) {
           </h1>
         </div>
         <div className="actions workspace-actions">
-          <span className="pill">YOUR OWN UNDERSTANDING</span>
           {doc && (
             <DeleteButton
               kind="PDF"
@@ -208,6 +209,7 @@ function WorkspaceInner({ id }: { id: string }) {
               }}
             />
           )}
+          <div ref={setNoteActions} className="workspace-note-actions" />
         </div>
       </div>
       <div className="mobile-tabs">
@@ -324,6 +326,7 @@ function WorkspaceInner({ id }: { id: string }) {
             <NoteEditor
               key={note.id}
               note={note}
+              actionsHost={noteActions}
               onDeleted={() => {
                 setAddition(undefined);
                 if (standalone) navigate("/library");
@@ -462,11 +465,13 @@ function WorkspaceInner({ id }: { id: string }) {
 }
 function NoteEditor({
   note,
+  actionsHost,
   onDeleted,
   onAdded,
   onReviewer,
 }: {
   note: Note;
+  actionsHost: HTMLDivElement | null;
   onDeleted: () => void;
   onAdded: () => void;
   onReviewer: (text: string, refs: Ref[]) => void;
@@ -532,65 +537,71 @@ function NoteEditor({
   }, [blocked]);
   if (!n) return null;
   return (
-    <div data-saving={status !== "Saved"}>
-      <div className="note-editor-heading">
-        <span className="eyebrow">YOUR NOTE</span>
-        <DeleteButton
-          kind="note"
-          title={n.title}
+    <>
+      {actionsHost &&
+        createPortal(
+          <DeleteButton
+            kind="note"
+            title={n.title}
+            disabled={blocked}
+            onDelete={async () => {
+              await remove();
+              onDeleted();
+            }}
+          />,
+          actionsHost,
+        )}
+      <div data-saving={status !== "Saved"}>
+        <div className="note-editor-heading">
+          <span className="eyebrow">YOUR NOTE</span>
+        </div>
+        <input
+          className="note-title"
+          aria-label="Note title"
+          value={n.title}
           disabled={blocked}
-          onDelete={async () => {
-            await remove();
-            onDeleted();
-          }}
-        />
-      </div>
-      <input
-        className="note-title"
-        aria-label="Note title"
-        value={n.title}
-        disabled={blocked}
-        onChange={(e) =>
-          change({ ...n, title: e.target.value, updated: Date.now() })
-        }
-        onBlur={() => flush()}
-      />
-      {!n.documentId && (
-        <CourseSelect
-          value={n.courseId}
-          onChange={(courseId) =>
-            change({ ...n, courseId, updated: Date.now() })
+          onChange={(e) =>
+            change({ ...n, title: e.target.value, updated: Date.now() })
           }
+          onBlur={() => flush()}
         />
-      )}
-      <div className="save-line">
-        <button className="text-button" onClick={() => flush()}>
-          {status}
-        </button>
-        <span>
-          {textOf(n.content).split(/\s+/).filter(Boolean).length} words
-        </span>
+        {!n.documentId && (
+          <CourseSelect
+            value={n.courseId}
+            onChange={(courseId) =>
+              change({ ...n, courseId, updated: Date.now() })
+            }
+          />
+        )}
+        <div className="save-line">
+          <button className="text-button" onClick={() => flush()}>
+            {status}
+          </button>
+          <span>
+            {textOf(n.content).split(/\s+/).filter(Boolean).length} words
+          </span>
+        </div>
+        {blocked && !deleting && (
+          <p className="banner">
+            Open in another tab. Close it and reload to edit here.
+          </p>
+        )}
+        <RichEditor
+          key={revision}
+          disabled={blocked}
+          content={n.content}
+          onChange={(content) =>
+            change({ ...current.current!, content, updated: Date.now() })
+          }
+          onExcerpt={onReviewer}
+        />
+        <div className="actions note-actions">
+          <button className="secondary" onClick={() => window.print()}>
+            Print note / PDF
+          </button>
+        </div>
       </div>
-      {blocked && !deleting && (
-        <p className="banner">
-          Open in another tab. Close it and reload to edit here.
-        </p>
-      )}
-      <RichEditor
-        key={revision}
-        disabled={blocked}
-        content={n.content}
-        onChange={(content) =>
-          change({ ...current.current!, content, updated: Date.now() })
-        }
-        onExcerpt={onReviewer}
-      />
-      <div className="actions note-actions">
-        <button className="secondary" onClick={() => window.print()}>
-          Print note / PDF
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 function PDFReader({

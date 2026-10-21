@@ -91,7 +91,7 @@ Native download links must point to a verified signed release (TestFlight or App
 
 ## Removing student materials
 
-Library and course note rows expose a labeled **Delete note** action. PDF cards and the open reading workspace expose **Delete PDF**. The same accessible native dialog names the selected item, explains what remains, focuses Cancel first, and supports Escape. Failed deletion leaves the dialog open with an error and retry available. These controls work offline.
+Library and course note rows expose a labeled **Delete note** action. PDF cards and the open reading workspace expose **Delete PDF**. In the study workspace, both active-note and PDF delete controls live in a sticky header that stays visible during page and editor scrolling. The note action is portaled from its editor so it keeps the existing save and deletion lifecycle. The same accessible native dialog names the selected item, explains what remains, focuses Cancel first, and supports Escape. Failed deletion leaves the dialog open with an error and retry available. These controls work offline.
 
 Deleting a PDF removes its local blob while preserving its notes, reviewers, and quotations. Deleting an open linked note keeps the PDF open and selects the next note; deleting a standalone note returns to Library. Library note deletion acquires the same Web Lock as the editor, preventing deletion while another tab owns that note. Editor deletion serializes with in-flight saves, stops queued autosaves, and clears the pending draft only after deletion succeeds. Autosave updates existing records instead of inserting missing records, so a late write cannot recreate a deleted note.
 
