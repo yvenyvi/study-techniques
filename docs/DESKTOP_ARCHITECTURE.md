@@ -68,7 +68,7 @@ npm run desktop:dev
 npm run desktop:build -- --bundles nsis
 ```
 
-The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run installs and verifies its exact package before uploading `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.1.1` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
+The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run uploads `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums as diagnostic artifacts, then installs and verifies that exact package. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.2.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
 
 ## Verification
 
@@ -94,3 +94,11 @@ Supporting checks passed: 9 shared data/unit tests, 5 Rust persistence tests, 5 
 [The 1.1.1 Windows verification run](https://github.com/yvenyvi/study-techniques/actions/runs/39556198475) passed the installed-app check, including saved focus/break durations, reload recovery, and preservation of running/paused progress. Shared code normalizes older idle timer records and saves preferences plus idle countdown changes atomically. Settings observes saved preference values so unrelated native timer writes cannot reset form edits. The progress ring uses the active phase's original duration.
 
 Supporting checks passed: 16 shared unit/data tests, 6 TypeScript-to-Rust/SQLite integration tests, 18 web browser workflows, and the desktop browser-to-native-storage workflow. The timer preference flow also passed against the live Vercel web app. Install 1.1.1 over the existing Windows preview to receive this fix; the native library location and storage schema are unchanged.
+
+### Document editor — version 1.2
+
+[The Windows 1.2 verification run](https://github.com/yvenyvi/study-techniques/actions/runs/39560874869) passed the desktop workflow and installed-package check. The actual Windows app exercised rich text, fonts, highlights, links, table rows/columns, undo/redo, and saved document columns, then closed and reopened to verify recovery from SQLite. The library location and schema remain unchanged.
+
+Supporting checks passed: 18 shared unit/data tests, 6 TypeScript-to-Rust/SQLite integration tests, 20 web browser workflows, and the desktop browser-to-native-storage workflow. Browser checks cover merged/split table cells, print styling, responsive columns, offline recovery, and ZIP restoration. The live Vercel editor passed formatting and offline recovery at iPad width. Native iPad analysis, tests, and an unsigned simulator build passed with advanced notes protected as read-only previews.
+
+Timer verification now waits for the Settings save acknowledgement before reloading. The corrected flow also passed against real SQLite with every write delayed by 500 ms; unchanged paused countdown text is not used as a save acknowledgement.
