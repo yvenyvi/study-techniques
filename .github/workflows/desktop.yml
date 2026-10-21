@@ -48,6 +48,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+          cache-on-failure: true
       - run: npm ci
       - run: npm test
       - run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --locked

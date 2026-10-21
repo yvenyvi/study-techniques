@@ -17,7 +17,7 @@
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "test:desktop": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
-    "test:desktop:integration": "cargo build --manifest-path src-tauri/Cargo.toml --no-default-features --example storage_bridge --locked && vitest run tests-desktop",
+    "test:desktop:integration": "cargo build --manifest-path src-tauri/Cargo.toml --no-default-features --example storage_bridge --locked && vitest run tests-desktop/storage.test.ts",
     "test:desktop:e2e": "playwright test --config playwright.desktop.config.ts"
   },
   "dependencies": {
