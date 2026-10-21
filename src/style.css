@@ -725,6 +725,117 @@ nav a:hover {
 .goal-form h2 {
   margin-bottom: 22px;
 }
+.goal-form .two-column > label,
+.goal-dropdown {
+  min-width: 0;
+}
+.goal-materials {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(0, 2fr) auto;
+  align-items: start;
+  gap: 20px;
+  margin-top: 24px;
+}
+.goal-help {
+  font-size: 12px;
+  font-weight: normal;
+  color: #657567;
+  margin: 0;
+  line-height: 1.5;
+}
+.goal-dropdown {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.goal-dropdown-trigger {
+  width: 100%;
+  min-height: 46px;
+  justify-content: space-between;
+  text-align: left;
+  background: #fff;
+  color: #293e36;
+  border: 1px solid #dce1d8;
+  font-size: 14px;
+  font-weight: normal;
+  padding: 10px 12px;
+}
+.goal-dropdown-trigger span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.goal-dropdown-trigger svg {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.goal-dropdown-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.goal-dropdown-menu {
+  position: absolute;
+  top: 72px;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fffefa;
+  border: 1px solid #dce1d8;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #293e3620;
+}
+.goal-dropdown-done {
+  width: 100%;
+  margin-top: 8px;
+  min-height: 44px;
+}
+.goal-material-option:hover,
+.goal-material-option:focus-within {
+  background: #eff3ec;
+  border-radius: 4px;
+}
+.goal-material-option {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+.goal-material-option input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+.goal-material-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.goal-submit {
+  min-height: 44px;
+  margin-top: 20px;
+}
+@media (max-width: 700px) {
+  .goal-form .two-column,
+  .goal-materials {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .goal-form input:not([type="checkbox"]),
+  .goal-dropdown-trigger {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .goal-submit {
+    width: 100%;
+    margin-top: 0;
+  }
+}
 .history-row {
   display: flex;
   gap: 15px;
@@ -1690,5 +1801,15 @@ a:focus-visible {
     position: static;
     border-bottom: 0;
     padding: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .sidebar nav a {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    padding: 9px 2px;
+    gap: 5px;
   }
 }

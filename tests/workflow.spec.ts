@@ -580,3 +580,100 @@ test("Library cannot delete another tab's open note, and deletion can be retried
   await library.reload();
   await expect(library.locator(".note-row")).toHaveCount(0);
 });
+
+test("goal materials remain usable on narrow screens and link to the saved goal", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/app/library");
+  const title =
+    "A-very-long-material-title-about-working-memory-and-learning-without-spaces";
+  await page.locator("input[type=file]").setInputFiles({
+    name: `${title}.pdf`,
+    mimeType: "application/pdf",
+    buffer: pdf(),
+  });
+  await expect(page).toHaveURL(/study/);
+  await page.goto("/app/goals");
+  await expect(
+    page.getByRole("button", { name: /Course.*No course/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Study materials.*Choose PDFs/ })
+    .click();
+  const material = page.getByRole("checkbox", { name: `PDF: ${title}` });
+  await material.check();
+  await expect(material).toBeChecked();
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const form = page.locator(".goal-form");
+    const bounds = await form.boundingBox();
+    for (const control of await form
+      .locator("input, select, button, fieldset")
+      .all()) {
+      const box = await control.boundingBox();
+      expect(box!.x).toBeGreaterThanOrEqual(bounds!.x);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(
+        bounds!.x + bounds!.width,
+      );
+    }
+  }
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await page
+    .getByLabel("Study goal", { exact: true })
+    .fill("Understand memory");
+  await page.getByLabel("Finished looks like…").fill("Explain the model");
+  await page.getByRole("button", { name: "Create goal" }).click();
+  const goal = page
+    .locator(".goal-row")
+    .filter({ hasText: "Understand memory" });
+  await expect(goal.getByRole("link", { name: /Open material/ })).toBeVisible();
+  await page.reload();
+  await goal.getByRole("link", { name: /Open material/ }).click();
+  await expect(page.locator(".textLayer")).toContainText("Working memory");
+});
+
+test("goal dropdowns explain optional choices and support keyboard dismissal", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/app/goals");
+  const course = page.getByRole("button", { name: /Course.*No course/ });
+  await course.focus();
+  await page.keyboard.press("Enter");
+  await expect(course).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("radio", { name: "No course — general goal" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(course).toBeFocused();
+  await expect(course).toHaveAttribute("aria-expanded", "false");
+  const materials = page.getByRole("button", {
+    name: /Study materials.*Choose PDFs/,
+  });
+  await materials.click();
+  await expect(
+    page.getByText(
+      "No PDFs or reviewers yet. Add them in Library or Reviewers, or leave this blank.",
+    ),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(materials).toBeFocused();
+  await materials.click();
+  await page.getByLabel("Study goal", { exact: true }).click();
+  await expect(materials).toHaveAttribute("aria-expanded", "false");
+  await page
+    .getByLabel("Study goal", { exact: true })
+    .fill("Review class notes");
+  await page.getByLabel("Finished looks like…").fill("Write three takeaways");
+  await page.getByRole("button", { name: "Create goal" }).click();
+  await expect(
+    page.locator(".goal-row").filter({ hasText: "Review class notes" }),
+  ).toBeVisible();
+});

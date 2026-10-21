@@ -243,7 +243,7 @@ export const guides: Record<GuideId, { title: string; steps: GuideStep[] }> = {
       },
       {
         title: "Keep the right materials nearby",
-        body: "Choose a course and link PDFs or reviewers to your goal. These links help you return to the work without searching again.",
+        body: "Both dropdowns are optional. Pick a course to organize your goal, or keep it as a general goal. Study materials adds shortcuts to PDFs or reviewers so you can open them from the saved goal.",
         target: '[data-guide="goal-materials"]',
       },
       {

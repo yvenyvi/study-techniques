@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useLiveQuery } from "./storage/live";
 import { db, uid, type Goal } from "./data";
-import { PageTitle, CourseSelect, report } from "./shared";
+import { PageTitle, report } from "./shared";
 import { GuidePage } from "./guides";
+import { GoalDropdown } from "./goal-dropdown";
 import { Plus, Check, Target } from "lucide-react";
 export function GoalRow({ goal: g }: { goal: Goal }) {
   return (
@@ -67,6 +68,7 @@ export function Goals() {
       () => db.sessions.orderBy("started").reverse().toArray(),
       [],
     ) || [];
+  const courses = useLiveQuery(() => db.courses.toArray(), []) || [];
   const docs = useLiveQuery(() => db.documents.toArray(), []) || [];
   const reviewers = useLiveQuery(() => db.reviewers.toArray(), []) || [];
   return (
@@ -118,36 +120,35 @@ export function Goals() {
             />
           </label>
         </div>
-        <div className="toolbar" data-guide="goal-materials">
-          <CourseSelect value={course} onChange={setCourse} />
-          <label>
-            Linked materials
-            <select
-              multiple
-              value={materials}
-              onChange={(e) =>
-                setMaterials(
-                  Array.from(e.target.selectedOptions, (o) => o.value),
-                )
-              }
-            >
-              {docs
-                .filter((d) => !course || d.courseId === course)
-                .map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.title}
-                  </option>
-                ))}
-              {reviewers
-                .filter((r) => !course || r.courseId === course)
-                .map((r) => (
-                  <option key={r.id} value={`reviewer:${r.id}`}>
-                    Reviewer: {r.title}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <button>
+        <div className="goal-materials" data-guide="goal-materials">
+          <GoalDropdown
+            label="Course (optional)"
+            help="Organize this goal under a course, or leave it as a general goal."
+            options={[
+              { value: "", label: "No course — general goal" },
+              ...courses.map((item) => ({ value: item.id, label: item.name })),
+            ]}
+            selected={[course]}
+            onChange={([value]) => setCourse(value)}
+          />
+          <GoalDropdown
+            label="Study materials (optional)"
+            help="Add shortcuts to PDFs or reviewers you'll use for this goal. Your files stay where they are."
+            multiple
+            options={[
+              ...docs.map((item) => ({
+                value: item.id,
+                label: `PDF: ${item.title}`,
+              })),
+              ...reviewers.map((item) => ({
+                value: `reviewer:${item.id}`,
+                label: `Reviewer: ${item.title}`,
+              })),
+            ]}
+            selected={materials}
+            onChange={setMaterials}
+          />
+          <button className="goal-submit">
             <Plus size={16} />
             Create goal
           </button>
