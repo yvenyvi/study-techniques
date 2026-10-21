@@ -36,6 +36,7 @@ Keep the same production domain for future deployments: browser data is tied to 
 ## Download and install status
 
 - **Web:** available in the browser. The landing page links to `/app/` and offers installation instructions. On iPad/iPhone, open the workspace in Safari and choose Share → Add to Home Screen. On Chrome/Edge desktop, use the browser's install action when supported. Open the installed app online once and wait for offline readiness.
+- **Windows desktop:** Tauri companion with SQLite and local PDF files. See [desktop architecture](DESKTOP_ARCHITECTURE.md) for the build and Windows installer verification workflows. The first preview is unsigned and requires Windows 10/11 x64. The installer build and installed-app check passed in [the verified Windows release run](https://github.com/yvenyvi/study-techniques/actions/runs/39546961334). The landing page links to the `desktop-v1.1.0` GitHub pre-release.
 - **Native iPad:** in development. No signed `.ipa`, TestFlight invitation, or App Store listing is available. The landing page accurately says “coming soon”; it has no inactive download buttons or fabricated store URLs.
 - **Future native release:** build and sign on macOS with Xcode, test on a physical iPad (including Scribble and suspended timers), distribute through TestFlight or the App Store, then replace the native card's status with the verified release URL. Keep web installation links available.
 
@@ -49,10 +50,10 @@ The initial publication used a direct CLI build deployment. It did not push the 
 
 Live verification passed after correcting the trailing-slash rewrite: landing-page navigation, `/app/`, direct `/app/library`, service-worker readiness, and saved-note reload with the browser offline. The production browser emitted no page errors. Local checks passed: 9 unit/data tests, 12 browser tests, and the production build.
 
-## User-managed Vercel project
+## Current production site
 
-The user supplied this deployment URL on October 21, 2026: **https://focus-room-xi-pearl.vercel.app/**.
+The permanent production URL is **https://focus-room-xi-pearl.vercel.app/**. The landing page is `/`, and the workspace lives under `/app/`. GitHub `main` is now connected successfully; pushes automatically deploy to the Vercel `focus-room` and `study-techniques` projects. The earlier legacy page and missing `/app` routes were resolved when the updated source reached GitHub. Current browser checks verify landing navigation, deep links, service-worker readiness, and saved content offline.
 
-At verification, `/` returned HTTP 200 with the legacy **Focus & Notes** page and its `includes/app.js` script. `/app/`, `/app/library`, and `/manifest.webmanifest` returned HTTP 404. GitHub `main` was still at `417f202`, while the offline workspace, landing page, and native companion were saved locally in `734c51a`. Both the shell push and connected GitHub app had returned HTTP 403 for repository writes.
+## Windows desktop release
 
-This deployment needs the updated source published to GitHub. If the Vercel project is linked to `yvenyvi/study-techniques` with `main` as its production branch, a successful push should trigger a new build using the checked-in `vercel.json`. Otherwise, link that repository or deploy the updated checkout through an authenticated Vercel CLI. After publication, verify the landing page, `/app/`, deep routes, manifest, and offline workflow at this domain.
+GitHub Actions builds the NSIS installer independently of Vercel. The `Windows installer check` workflow installs and runs the artifact on Windows before publication. GitHub Releases hosts installer downloads and checksums; Vercel hosts the landing page and web workspace. Student desktop data stays in the app-local SQLite database and PDF folder and is never stored on either host. See [desktop architecture](DESKTOP_ARCHITECTURE.md) and [preview release notes](DESKTOP_RELEASE.md).

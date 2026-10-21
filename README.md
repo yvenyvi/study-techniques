@@ -1,8 +1,10 @@
 # Study Room
 
-An offline-first workspace for a BS Psychology student: organize readings, write notes, create guided reviewers, and finish clear study goals. No AI, account, backend, or document uploads to a server.
+An offline-first workspace for a BS Psychology student: organize readings, write notes, create guided reviewers, and finish clear study goals. No AI, account, hosted backend, or document uploads to a server.
 
 ## Windows desktop app
+
+[Download the Windows x64 preview](https://github.com/yvenyvi/study-techniques/releases/download/desktop-v1.1.0/Study-Room-Windows-x64-Setup.exe).
 
 The Tauri companion stores study records in SQLite and PDFs as local files, independently of browser data. It works offline from first launch. Build with `npm run desktop:dev` or `npm run desktop:build -- --bundles nsis` on Windows with Rust and Microsoft C++ Build Tools. GitHub Actions builds a Windows x64 installer with the WebView2 offline runtime. See [desktop architecture](docs/DESKTOP_ARCHITECTURE.md) and [preview release notes](docs/DESKTOP_RELEASE.md).
 
