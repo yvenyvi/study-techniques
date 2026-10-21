@@ -41,6 +41,8 @@ test("desktop UI uses real native storage, survives browser-data removal, and ex
           return id;
         },
         invoke: async (command: string, args: any) => {
+          if (command === "desktop_update_status")
+            return { version: "1.4.0", enabled: false };
           if (command === "plugin:event|listen") {
             w.nativeListeners[args.event] = args.handler;
             return ++sequence;

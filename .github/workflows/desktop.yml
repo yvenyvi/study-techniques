@@ -36,7 +36,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the verified installer as a GitHub pre-release
+        description: Publish the signed installer and automatic update feed
         type: boolean
         default: false
 concurrency:
@@ -59,25 +59,31 @@ jobs:
           workspaces: src-tauri -> target
           cache-on-failure: true
       - run: npm ci
+      - run: npm run test:release
       - run: npm test
       - run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --locked
       - run: npm run test:desktop:integration
-      - run: npm run desktop:build -- --bundles nsis
+      - name: Build Windows app (sign updates when configured)
+        run: npm run desktop:build -- --bundles nsis
+        env:
+          STUDY_ROOM_UPDATER_PUBLIC_KEY: ${{ github.event_name != 'pull_request' && vars.STUDY_ROOM_UPDATER_PUBLIC_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ github.event_name != 'pull_request' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+          STUDY_ROOM_REQUIRE_UPDATER: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && '1' || '0' }}
       - run: npx playwright install chromium
       - run: npm run test:desktop:e2e
-      - name: Prepare Windows download
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force release
-          Copy-Item src-tauri/target/release/bundle/nsis/*-setup.exe release/Study-Room-Windows-x64-Setup.exe
-          $hash = (Get-FileHash release/Study-Room-Windows-x64-Setup.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  Study-Room-Windows-x64-Setup.exe" | Out-File -Encoding ascii release/SHA256SUMS.txt
+      - name: Prepare Windows download and update feed
+        run: node scripts/prepare-desktop-release.mjs
+        env:
+          STUDY_ROOM_REQUIRE_UPDATER: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && '1' || '0' }}
       - uses: actions/upload-artifact@v4
         with:
           name: Study-Room-Windows-x64
           path: |
             release/Study-Room-Windows-x64-Setup.exe
             release/SHA256SUMS.txt
+            release/Study-Room-Windows-x64-Setup.exe.sig
+            release/latest.json
           if-no-files-found: error
           retention-days: 30
       - name: Install and verify the Windows package
@@ -101,7 +107,11 @@ jobs:
         with:
           name: Study-Room-Windows-x64
           path: release
-      - name: Publish Windows preview
+      - name: Publish signed Windows release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create desktop-v1.3.0 release/* --target "$GITHUB_SHA" --prerelease --title "Study Room 1.3 — Interactive page guides" --notes-file docs/DESKTOP_RELEASE.md
+        run: |
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          test -s release/latest.json
+          test -s release/Study-Room-Windows-x64-Setup.exe.sig
+          gh release create "desktop-v$version" release/* --target "$GITHUB_SHA" --latest --title "Study Room $version" --notes-file docs/DESKTOP_RELEASE.md

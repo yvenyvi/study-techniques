@@ -1,4 +1,14 @@
-Version 1.3 adds interactive first-visit page guides across Overview, Library, courses, PDF workspaces, notes, reviewers, practice, goals, and Settings.
+Version 1.4 adds verified Windows app updates, clearer goal controls, and improved layouts at narrow widths.
+
+- Signed releases check for updates on startup, every six hours, and on reconnect.
+- **Settings & data → App updates** shows the installed version and a manual **Check for updates** button.
+- **Install and restart** downloads and verifies the new installer. **Later** keeps the current session uninterrupted.
+- Installation waits for saved notes and refuses to interrupt an active focus session or break. Saved SQLite data and local PDFs stay in the same folder.
+- Goal forms explain optional courses and study materials, using custom dropdowns that also work on smaller screens.
+
+For versions 1.3 and earlier, export a backup and install the first signed 1.4 installer once. Future higher versions can then update from inside the app. Updater-enabled installers are published only after the signing requirements and Windows verification steps pass. See [release signing and publication](DESKTOP_UPDATES.md).
+
+Version 1.3 introduced interactive first-visit page guides across Overview, Library, courses, PDF workspaces, notes, reviewers, practice, goals, and Settings.
 
 - Short explanations point to real controls, with optional things to try.
 - Back, Next, Show me, Skip, and keyboard controls keep guidance easy to follow.
@@ -17,4 +27,4 @@ To move your existing work, export a ZIP from the web app's **Settings & data**,
 
 The desktop app shows its library folder in Settings. Clearing browser data does not affect it. Keep regular ZIP backups outside that folder. App updates keep the same library location; deleting that folder or losing the computer still removes your local data.
 
-Keep Study Room open for completion sounds. Saved timer deadlines resume after reopening; alerts do not run while the app is closed or the computer is asleep. This preview has no automatic updater. Install a newer release over the existing app after exporting a backup.
+Keep Study Room open for completion sounds. Saved timer deadlines resume after reopening; alerts do not run while the app is closed or the computer is asleep. Signed 1.4 releases add an automatic update check. Earlier previews require the one-time installer upgrade described above.

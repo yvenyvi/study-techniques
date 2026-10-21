@@ -3,5 +3,12 @@
   "identifier": "main-window",
   "description": "Local study workspace and user-selected backup exports",
   "windows": ["main"],
-  "permissions": ["core:default", "core:window:allow-destroy", "dialog:allow-save"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-destroy",
+    "dialog:allow-save",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install"
+  ]
 }

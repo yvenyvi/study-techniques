@@ -1813,3 +1813,26 @@ a:focus-visible {
     gap: 5px;
   }
 }
+
+.desktop-update-banner {
+  flex-wrap: wrap;
+}
+.desktop-update-banner > div {
+  flex: 1 1 240px;
+}
+.desktop-update-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #293e3680;
+}
+.desktop-update-overlay .panel {
+  max-width: 480px;
+}
+.desktop-update-overlay progress {
+  width: 100%;
+  accent-color: var(--green);
+}

@@ -56,7 +56,7 @@ All study assets ship inside the installer, so first launch can be offline. A co
 
 Timer state persists in SQLite using absolute deadlines. Opening the app after a deadline processes the expired phase once. The app does not run a background service; notifications/sounds are not promised while closed or asleep. Browser notifications are hidden in this preview; optional completion sounds work while open.
 
-There is no automatic desktop updater in v1. Install a later release over the existing app, preserving the app-data directory. Export a backup before upgrading. Native code signing requires a publisher certificate and is not configured for this initial preview; Windows can show an unknown-publisher/SmartScreen warning.
+Versions before 1.4 have no updater. Signed 1.4 builds use the Tauri updater with a build-time public key and a static GitHub release feed. They check on startup, periodically, on reconnect, and manually in Settings. Users choose when to install; active sessions and unsaved edits block installation. The NSIS update preserves the app-data directory and restarts the app. See [Windows update signing and publication](DESKTOP_UPDATES.md). Updater signatures are separate from Windows publisher certificates, so Windows may still show a SmartScreen warning.
 
 ## Build and release
 

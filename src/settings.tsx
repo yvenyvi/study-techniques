@@ -9,6 +9,7 @@ import { PageTitle, report } from "./shared";
 import { Download, Upload } from "lucide-react";
 import { saveFocusPreferences } from "./timer-preferences";
 import { GuidePage } from "./guides";
+import { DesktopUpdateSettings } from "./desktop-updates";
 import { resetGuideProgress } from "./guides-progress";
 export function Settings({ ready }: { ready: boolean }) {
   const settings = useLiveQuery(() => db.settings.get("preferences"), []);
@@ -131,6 +132,7 @@ export function Settings({ ready }: { ready: boolean }) {
             : "Background alerts depend on your browser. Timer progress is saved even when alerts are unavailable."}
         </p>
       </section>
+      <DesktopUpdateSettings />
       <section className="panel" data-guide="offline-storage">
         <h2>Offline & storage</h2>
         {isDesktop ? (

@@ -49,6 +49,20 @@ mod desktop {
         storage::save_backup(&path, &data)
     }
 
+    const UPDATER_PUBLIC_KEY: Option<&str> = option_env!("STUDY_ROOM_UPDATER_PUBLIC_KEY");
+
+    fn updater_enabled() -> bool {
+        cfg!(target_os = "windows") && UPDATER_PUBLIC_KEY.is_some_and(|key| !key.trim().is_empty())
+    }
+
+    #[tauri::command]
+    fn desktop_update_status(app: tauri::AppHandle) -> serde_json::Value {
+        serde_json::json!({
+            "version": app.package_info().version.to_string(),
+            "enabled": updater_enabled(),
+        })
+    }
+
     pub fn run() {
         let mut context = tauri::generate_context!();
         // CI must opt in explicitly. Ordinary installed launches keep developer
@@ -62,7 +76,18 @@ mod desktop {
                     Some(std::env::temp_dir().join("study-room-verification-webview"));
             }
         }
-        tauri::Builder::default()
+        if updater_enabled() {
+            context.config_mut().plugins.0.insert("updater".into(), serde_json::json!({
+                "pubkey": UPDATER_PUBLIC_KEY.unwrap().trim(),
+                "endpoints": ["https://github.com/yvenyvi/study-techniques/releases/latest/download/latest.json"],
+                "windows": { "installMode": "passive" }
+            }));
+        }
+        let mut builder = tauri::Builder::default();
+        if updater_enabled() {
+            builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+        }
+        builder
             .plugin(tauri_plugin_single_instance::init(|app, _, _| {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.unminimize();
@@ -84,7 +109,8 @@ mod desktop {
                 commit_library,
                 read_pdf,
                 storage_location,
-                save_backup
+                save_backup,
+                desktop_update_status
             ])
             .run(context)
             .expect("Could not start Study Room");

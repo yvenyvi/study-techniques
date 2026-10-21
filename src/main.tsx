@@ -31,6 +31,7 @@ import { Reviewers, ReviewerPage } from "./reviewers";
 import { Goals } from "./goals";
 import { Settings } from "./settings";
 import { PageGuides } from "./guides";
+import { DesktopUpdatesProvider, DesktopUpdateBanner } from "./desktop-updates";
 import "./style.css";
 function App() {
   const [notice, setNotice] = useState("");
@@ -137,6 +138,7 @@ function App() {
             </span>
           </div>
         </header>
+        <DesktopUpdateBanner />
         {update && (
           <div className="banner">
             An update is available. Save your work and end your timer first.{" "}
@@ -230,13 +232,15 @@ async function start() {
     }
     const routes = [{ path: "*", element: <App /> }];
     root.render(
-      <RouterProvider
-        router={
-          isDesktop
-            ? createHashRouter(routes)
-            : createBrowserRouter(routes, { basename: "/app" })
-        }
-      />,
+      <DesktopUpdatesProvider>
+        <RouterProvider
+          router={
+            isDesktop
+              ? createHashRouter(routes)
+              : createBrowserRouter(routes, { basename: "/app" })
+          }
+        />
+      </DesktopUpdatesProvider>,
     );
   } catch (error) {
     root.render(
