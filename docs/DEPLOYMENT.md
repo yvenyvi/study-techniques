@@ -48,3 +48,11 @@ On October 20, 2026, the landing page and app were published together at `https:
 The initial publication used a direct CLI build deployment. It did not push the local source changes to GitHub or enable automatic deployments from Git. Keep the local checkout; push the reviewed source and link the repository when setting up continuous deployments.
 
 Live verification passed after correcting the trailing-slash rewrite: landing-page navigation, `/app/`, direct `/app/library`, service-worker readiness, and saved-note reload with the browser offline. The production browser emitted no page errors. Local checks passed: 9 unit/data tests, 12 browser tests, and the production build.
+
+## User-managed Vercel project
+
+The user supplied this deployment URL on October 21, 2026: **https://focus-room-xi-pearl.vercel.app/**.
+
+At verification, `/` returned HTTP 200 with the legacy **Focus & Notes** page and its `includes/app.js` script. `/app/`, `/app/library`, and `/manifest.webmanifest` returned HTTP 404. GitHub `main` was still at `417f202`, while the offline workspace, landing page, and native companion were saved locally in `734c51a`. Both the shell push and connected GitHub app had returned HTTP 403 for repository writes.
+
+This deployment needs the updated source published to GitHub. If the Vercel project is linked to `yvenyvi/study-techniques` with `main` as its production branch, a successful push should trigger a new build using the checked-in `vercel.json`. Otherwise, link that repository or deploy the updated checkout through an authenticated Vercel CLI. After publication, verify the landing page, `/app/`, deep routes, manifest, and offline workflow at this domain.
