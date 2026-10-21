@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from "./storage/live";
 import { db, uid, type Goal } from "./data";
 import { PageTitle, CourseSelect, report } from "./shared";
 import { Plus, Check, Target } from "lucide-react";

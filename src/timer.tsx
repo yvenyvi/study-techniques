@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from "./storage/live";
 import {
   Play,
   Pause,
@@ -133,9 +133,9 @@ export function FocusTimer() {
           ? t.elapsed + Math.max(0, t.remaining - secondsLeft(t))
           : t.elapsed
         : 0;
-    await db.transaction("rw", [db.sessions, db.goals, db.timers], async () => {
+    await db.atomic("rw", [db.sessions, db.goals, db.timers], async (tx) => {
       if (t.phase === "focus" && t.started) {
-        await db.sessions.add({
+        await tx.sessions.add({
           id: uid(),
           goalId: t.goalId,
           started: t.started,
@@ -145,12 +145,12 @@ export function FocusTimer() {
           note,
         });
         if (complete && t.goalId)
-          await db.goals.update(t.goalId, {
+          await tx.goals.update(t.goalId, {
             done: true,
             completed: Date.now(),
           });
       }
-      await db.timers.put({
+      await tx.timers.put({
         ...fresh(),
         phase: "break",
         remaining: prefs.rest * 60,

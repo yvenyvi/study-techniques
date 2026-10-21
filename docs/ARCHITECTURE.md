@@ -97,8 +97,8 @@ Deleting a PDF removes its local blob while preserving its notes, reviewers, and
 
 The landing footer, shared web-workspace footer, and native iPad Settings include the dedication “Dedicated to Ivory Frias, the developer’s beloved.” This is interface text, outside student documents, printing, and backup data.
 
-## Desktop storage discussion — proposed next step
+## Desktop app
 
-A desktop PWA can be installed with the existing browser controls, but still stores PDFs and notes in browser-managed IndexedDB. Installation alone does not protect against clearing site data or browser eviction. Keep storage persistence requests and ZIP backups available.
+The Tauri Windows app implements native SQLite metadata storage and PDF files in the app-local data directory, using the shared React interface and a platform storage adapter. It bundles study assets for offline use from first launch and exchanges version-1 ZIP backups with web and iPad. The browser app retains IndexedDB. See [the desktop architecture](DESKTOP_ARCHITECTURE.md) for transaction boundaries, file durability, routing, installer builds, signing status, and validation limits.
 
-For a future desktop package, the proposed direction is Tauri with SQLite metadata and PDF files in the app's local data directory. Reuse the React interface after introducing a storage adapter; simply wrapping the current IndexedDB app would not achieve the intended storage change. Preserve the version-1 ZIP contract for transfer with web and iPad. Desktop packaging, installers, signing, migrations, and physical-device validation are not implemented in this change. Deleting the app's data or losing the device would still require an external backup.
+Browser installation still uses browser-managed storage. Desktop installation uses the separate native library; move existing web materials with ZIP export/restore. Neither installation method creates an external backup or automatic sync.

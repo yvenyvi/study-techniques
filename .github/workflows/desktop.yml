@@ -1,0 +1,86 @@
+name: Windows desktop app
+on:
+  push:
+    branches: [main]
+    paths:
+      [
+        "src/**",
+        "src-tauri/**",
+        "scripts/**",
+        "package*.json",
+        "vite.config.ts",
+        "tsconfig.json",
+        "app.html",
+        "public/**",
+        ".github/workflows/desktop.yml",
+      ]
+  pull_request:
+    paths:
+      [
+        "src/**",
+        "src-tauri/**",
+        "scripts/**",
+        "package*.json",
+        "vite.config.ts",
+        "tsconfig.json",
+        "app.html",
+        "public/**",
+        ".github/workflows/desktop.yml",
+      ]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified installer as a GitHub pre-release
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - run: npm test
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --locked
+      - run: npm run test:desktop:integration
+      - run: npm run desktop:build -- --bundles nsis
+      - run: npx playwright install chromium
+      - run: npm run test:desktop:e2e
+      - name: Prepare Windows download
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release
+          Copy-Item src-tauri/target/release/bundle/nsis/*-setup.exe release/Study-Room-Windows-x64-Setup.exe
+          $hash = (Get-FileHash release/Study-Room-Windows-x64-Setup.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  Study-Room-Windows-x64-Setup.exe" | Out-File -Encoding ascii release/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Study-Room-Windows-x64
+          path: release/*
+          if-no-files-found: error
+          retention-days: 30
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Study-Room-Windows-x64
+          path: release
+      - name: Publish Windows preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create desktop-v1.1.0 release/* --target "$GITHUB_SHA" --prerelease --title "Study Room 1.1 — Windows desktop preview" --notes-file docs/DESKTOP_RELEASE.md

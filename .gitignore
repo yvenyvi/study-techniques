@@ -7,3 +7,7 @@ public/pdf-assets/
 .vercel/
 supabase/.temp/
 .vercel
+
+dist-desktop/
+src-tauri/target/
+src-tauri/gen/

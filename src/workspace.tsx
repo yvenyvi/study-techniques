@@ -6,7 +6,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from "./storage/live";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -43,9 +43,10 @@ export function RichEditor({
   disabled?: boolean;
   onExcerpt?: (v: string, refs: Ref[]) => void;
 }) {
+  const navigate = useNavigate();
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: { openOnClick: false } }),
       Placeholder.configure({ placeholder: "Explain it in your own words…" }),
     ],
     content,
@@ -129,7 +130,17 @@ export function RichEditor({
           </button>
         )}
       </div>
-      <EditorContent editor={editor} />
+      <EditorContent
+        editor={editor}
+        onClick={(event) => {
+          const anchor = (event.target as HTMLElement).closest("a");
+          const href = anchor?.getAttribute("href") || "";
+          if (/^\/(?:app\/)?study\//.test(href)) {
+            event.preventDefault();
+            navigate(href.replace(/^\/app/, ""));
+          }
+        }}
+      />
     </>
   );
 }

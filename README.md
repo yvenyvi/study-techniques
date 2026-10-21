@@ -2,6 +2,12 @@
 
 An offline-first workspace for a BS Psychology student: organize readings, write notes, create guided reviewers, and finish clear study goals. No AI, account, backend, or document uploads to a server.
 
+## Windows desktop app
+
+The Tauri companion stores study records in SQLite and PDFs as local files, independently of browser data. It works offline from first launch. Build with `npm run desktop:dev` or `npm run desktop:build -- --bundles nsis` on Windows with Rust and Microsoft C++ Build Tools. GitHub Actions builds a Windows x64 installer with the WebView2 offline runtime. See [desktop architecture](docs/DESKTOP_ARCHITECTURE.md) and [preview release notes](docs/DESKTOP_RELEASE.md).
+
+Move web materials by exporting a ZIP in Settings, then restoring into the desktop app's empty workspace before saving preferences or starting a timer. Keep external backups; the apps do not sync automatically. The initial Windows preview is unsigned.
+
 ## iPad app
 
 The native Flutter companion lives in [mobile/](mobile/README.md). It provides an adaptive iPad workspace with typed rich notes and Scribble enabled, local SQLite storage, and manual ZIP transfer with the web app. See [the iPad architecture](docs/IPAD_ARCHITECTURE.md). Building or running the iPad simulator requires macOS and Xcode.

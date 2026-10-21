@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useBlocker } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from "./storage/live";
 import { db, type Ref } from "./data";
 const activeFlushers = new Set<() => Promise<boolean>>();
 export async function flushEditors() {

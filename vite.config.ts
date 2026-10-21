@@ -1,9 +1,29 @@
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  resolve: {
+    alias:
+      mode === "desktop"
+        ? [
+            {
+              find: "virtual:pwa-register",
+              replacement: fileURLToPath(
+                new URL("./src/storage/desktop-pwa.ts", import.meta.url),
+              ),
+            },
+          ]
+        : [],
+  },
   build: {
-    rollupOptions: { input: { landing: "index.html", app: "app.html" } },
+    outDir: mode === "desktop" ? "dist-desktop" : "dist",
+    rollupOptions: {
+      input:
+        mode === "desktop"
+          ? "app.html"
+          : { landing: "index.html", app: "app.html" },
+    },
   },
   plugins: [
     {
@@ -16,41 +36,47 @@ export default defineConfig({
       },
     },
     react(),
-    VitePWA({
-      registerType: "prompt",
-      includeAssets: ["icon.svg", "icon-192.png", "icon-512.png"],
-      manifest: {
-        name: "Study Room — Psychology Workspace",
-        short_name: "Study Room",
-        theme_color: "#35594b",
-        background_color: "#f7f6f1",
-        display: "standalone",
-        start_url: "/app/",
-        scope: "/app/",
-        id: "/app/",
-        icons: [
-          {
-            src: "/icon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
-            purpose: "any",
-          },
-          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-        ],
-      },
-      workbox: {
-        maximumFileSizeToCacheInBytes: 6000000,
-        globPatterns: ["**/*.{js,mjs,css,html,svg,png,woff2,bcmap,pfb,ttf}"],
-        navigateFallback: "app.html",
-        navigateFallbackAllowlist: [
-          /^\/app(?:\/|$)/,
-          /^\/(?:library|courses|study|reviewers|goals|settings)(?:\/|$)/,
-        ],
-      },
-    }),
+    ...(mode === "desktop"
+      ? []
+      : [
+          VitePWA({
+            registerType: "prompt",
+            includeAssets: ["icon.svg", "icon-192.png", "icon-512.png"],
+            manifest: {
+              name: "Study Room — Psychology Workspace",
+              short_name: "Study Room",
+              theme_color: "#35594b",
+              background_color: "#f7f6f1",
+              display: "standalone",
+              start_url: "/app/",
+              scope: "/app/",
+              id: "/app/",
+              icons: [
+                {
+                  src: "/icon.svg",
+                  sizes: "any",
+                  type: "image/svg+xml",
+                  purpose: "any",
+                },
+                { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+                { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+              ],
+            },
+            workbox: {
+              maximumFileSizeToCacheInBytes: 6000000,
+              globPatterns: [
+                "**/*.{js,mjs,css,html,svg,png,woff2,bcmap,pfb,ttf}",
+              ],
+              navigateFallback: "app.html",
+              navigateFallbackAllowlist: [
+                /^\/app(?:\/|$)/,
+                /^\/(?:library|courses|study|reviewers|goals|settings)(?:\/|$)/,
+              ],
+            },
+          }),
+        ]),
   ],
-});
+}));
 
 // Mirror Vercel rewrites in both local dev and production preview.
 function appRoutes(req: { url?: string }, _res: unknown, next: () => void) {

@@ -10,9 +10,19 @@
     "test": "vitest run src",
     "test:e2e": "playwright test",
     "predev": "node scripts/pdf-assets.mjs",
-    "prebuild": "node scripts/pdf-assets.mjs"
+    "prebuild": "node scripts/pdf-assets.mjs",
+    "dev:desktop": "node scripts/pdf-assets.mjs && vite --mode desktop --port 1420 --strictPort --host 127.0.0.1",
+    "build:desktop": "node scripts/pdf-assets.mjs && tsc --noEmit && vite build --mode desktop",
+    "desktop": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "test:desktop": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
+    "test:desktop:integration": "cargo build --manifest-path src-tauri/Cargo.toml --no-default-features --example storage_bridge --locked && vitest run tests-desktop",
+    "test:desktop:e2e": "playwright test --config playwright.desktop.config.ts"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.3",
     "@tiptap/extension-placeholder": "^3.0.0",
     "@tiptap/react": "^3.0.0",
     "@tiptap/starter-kit": "^3.0.0",
@@ -27,6 +37,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@tauri-apps/cli": "^2.12.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

@@ -2,13 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
+  createHashRouter,
   RouterProvider,
   Routes,
   Route,
   NavLink,
   Link,
 } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from "./storage/live";
 import {
   BookOpen,
   Home as HomeIcon,
@@ -18,7 +19,9 @@ import {
   WifiOff,
 } from "lucide-react";
 import { registerSW } from "virtual:pwa-register";
-import { db } from "./data";
+import { db, initializeStorage } from "./data";
+import { isDesktop } from "./platform";
+import { DesktopStore } from "./storage/desktop";
 import { report, flushEditors } from "./shared";
 import { FocusTimer } from "./timer";
 import { Workspace } from "./workspace";
@@ -31,7 +34,7 @@ import "./style.css";
 function App() {
   const [notice, setNotice] = useState("");
   const [offline, setOffline] = useState(!navigator.onLine);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(isDesktop);
   const [update, setUpdate] = useState(false);
   const updater = useRef<((reload?: boolean) => Promise<void>) | null>(null);
   useEffect(() => {
@@ -45,15 +48,17 @@ function App() {
     window.addEventListener("notice", fn);
     window.addEventListener("online", network);
     window.addEventListener("offline", network);
-    updater.current = registerSW({
-      onOfflineReady() {
-        setReady(true);
-      },
-      onNeedRefresh() {
-        setUpdate(true);
-      },
-    });
-    navigator.serviceWorker?.ready.then(() => setReady(true)).catch(() => {});
+    if (!isDesktop) {
+      updater.current = registerSW({
+        onOfflineReady() {
+          setReady(true);
+        },
+        onNeedRefresh() {
+          setUpdate(true);
+        },
+      });
+      navigator.serviceWorker?.ready.then(() => setReady(true)).catch(() => {});
+    }
     return () => {
       window.removeEventListener("unhandledrejection", rejected);
       window.removeEventListener("notice", fn);
@@ -107,11 +112,13 @@ function App() {
         <div className="sidebar-bottom">
           <div className="offline-chip">
             {offline ? <WifiOff size={16} /> : <span className="status-dot" />}
-            {offline
-              ? "Working offline"
-              : ready
-                ? "Ready for offline study"
-                : "Local workspace"}
+            {isDesktop
+              ? "Desktop · saved on this computer"
+              : offline
+                ? "Working offline"
+                : ready
+                  ? "Ready for offline study"
+                  : "Local workspace"}
           </div>
           <NavLink to="/settings">
             <SettingsIcon size={18} />
@@ -183,7 +190,7 @@ function App() {
 }
 // Version-1 backups (including the native app) use /study/:id source links.
 // Keep those links and earlier bookmarks working without changing saved content.
-if (!/^\/app(?:\/|$)/.test(location.pathname)) {
+if (!isDesktop && !/^\/app(?:\/|$)/.test(location.pathname)) {
   const path = location.pathname === "/app.html" ? "/" : location.pathname;
   history.replaceState(
     null,
@@ -191,10 +198,56 @@ if (!/^\/app(?:\/|$)/.test(location.pathname)) {
     `/app${path}${location.search}${location.hash}`,
   );
 }
-createRoot(document.getElementById("root")!).render(
-  <RouterProvider
-    router={createBrowserRouter([{ path: "*", element: <App /> }], {
-      basename: "/app",
-    })}
-  />,
-);
+const root = createRoot(document.getElementById("root")!);
+async function start() {
+  try {
+    await initializeStorage();
+    if (isDesktop) {
+      const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      let closing = false;
+      await getCurrentWindow().onCloseRequested(async (event) => {
+        event.preventDefault();
+        if (closing) return;
+        closing = true;
+        try {
+          if (await flushEditors()) {
+            if (db instanceof DesktopStore) await db.settle();
+            await getCurrentWindow().destroy();
+          } else
+            report(
+              "Your edits could not be saved. Retry saving before closing Study Room.",
+            );
+        } catch (error) {
+          report(error);
+        } finally {
+          closing = false;
+        }
+      });
+    }
+    const routes = [{ path: "*", element: <App /> }];
+    root.render(
+      <RouterProvider
+        router={
+          isDesktop
+            ? createHashRouter(routes)
+            : createBrowserRouter(routes, { basename: "/app" })
+        }
+      />,
+    );
+  } catch (error) {
+    root.render(
+      <main className="empty">
+        <h1>Your library could not be opened</h1>
+        <p role="alert">
+          {error instanceof Error ? error.message : String(error)}
+        </p>
+        <p>
+          Your existing files have been kept. Check that your disk is available,
+          then retry.
+        </p>
+        <button onClick={() => location.reload()}>Retry opening library</button>
+      </main>,
+    );
+  }
+}
+void start();

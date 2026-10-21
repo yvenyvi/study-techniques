@@ -1,5 +1,7 @@
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { db } from "./data";
+import type { StudyStore } from "./storage/store";
+import { isDesktop, nativeInvoke } from "./platform";
 const names = [
   "courses",
   "documents",
@@ -9,14 +11,14 @@ const names = [
   "sessions",
   "settings",
 ] as const;
-export async function backup() {
+export async function backup(store: StudyStore = db) {
   const data: any = { version: 1 };
   const files: Record<string, Uint8Array> = {};
-  await db.transaction(
+  await store.atomic(
     "r",
-    names.map((n) => db.table(n)),
-    async () => {
-      for (const n of names) data[n] = await db.table(n).toArray();
+    names.map((n) => store.table(n)),
+    async (tx) => {
+      for (const n of names) data[n] = await tx.table(n).toArray();
     },
   );
   for (const d of data.documents) {
@@ -155,7 +157,7 @@ export function validateBackup(data: any, files: Record<string, Uint8Array>) {
     )
       throw Error("Invalid preferences.");
 }
-export async function restore(file: File) {
+export async function restore(file: File, store: StudyStore = db) {
   if (file.size > 250 * 1024 * 1024) throw Error("Backup exceeds 250 MB.");
   let total = 0;
   const files = unzipSync(new Uint8Array(await file.arrayBuffer()), {
@@ -173,16 +175,31 @@ export async function restore(file: File) {
     d.blob = new Blob([files[`pdfs/${d.id}.pdf`] as Uint8Array<ArrayBuffer>], {
       type: "application/pdf",
     });
-  await db.transaction("rw", db.tables, async () => {
-    for (const table of db.tables)
+  await store.atomic("rw", store.tables, async (tx) => {
+    for (const table of tx.tables)
       if (await table.count())
         throw Error(
           "Restore requires an empty library, including settings and history.",
         );
-    for (const n of names) await db.table(n).bulkAdd(data[n]);
+    for (const n of names) await tx.table(n).bulkAdd(data[n]);
   });
 }
-export function download(blob: Blob, name: string) {
+export async function download(blob: Blob, name: string) {
+  if (isDesktop) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const path = await save({
+      defaultPath: name,
+      filters: [{ name: "Study Room backup", extensions: ["zip"] }],
+    });
+    if (path) {
+      const { toBase64 } = await import("./storage/desktop");
+      await nativeInvoke("save_backup", {
+        path,
+        data: toBase64(new Uint8Array(await blob.arrayBuffer())),
+      });
+    }
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
