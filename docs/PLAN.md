@@ -181,7 +181,7 @@ Deploy the web workspace and a public landing page together on Vercel. Public `/
 
 Make deletion discoverable in Library, course notes, and the open PDF/note workspace. Require item-specific confirmation, preserve notes when deleting their PDF, and prevent autosave or another editor tab from recreating a deleted note. Use the same personal dedication in the landing page, web workspace, and native Settings: “Dedicated to Ivory Frias, the developer’s beloved.” Keep it outside student content and exports.
 
-Desktop installation was discussed as a future storage improvement. A proposed Tauri package would reuse the React interface with SQLite and a local PDF directory; installing the current PWA alone does not change its browser-managed storage. This remains a proposed next phase; see the implementation architecture for the boundary.
+Desktop installation was approved as a storage improvement. The Windows Tauri implementation uses SQLite and a local PDF directory. Installing the browser PWA continues to use browser-managed storage. See the desktop delivery extension below.
 
 ## Desktop delivery extension
 

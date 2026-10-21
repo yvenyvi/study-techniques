@@ -1,0 +1,44 @@
+name: Windows installer check
+on:
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: Successful Windows desktop app workflow run ID
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  install-and-reopen:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: Study-Room-Windows-x64
+          path: installer
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.build_run }}
+      - name: Install and check actual Windows app
+        shell: pwsh
+        run: |
+          $expected = ((Get-Content installer/SHA256SUMS.txt) -split ' ')[0]
+          $actual = (Get-FileHash installer/Study-Room-Windows-x64-Setup.exe -Algorithm SHA256).Hash.ToLower()
+          if ($expected -ne $actual) { throw "Installer checksum does not match" }
+          $installDir = Join-Path $env:RUNNER_TEMP 'StudyRoomPreview'
+          $installer = Start-Process -FilePath installer/Study-Room-Windows-x64-Setup.exe -ArgumentList @('/S', "/D=$installDir") -Wait -PassThru
+          if ($installer.ExitCode -ne 0) { throw "Installation failed: $($installer.ExitCode)" }
+          $env:STUDY_ROOM_EXECUTABLE = Join-Path $installDir 'study-room.exe'
+          if (!(Test-Path $env:STUDY_ROOM_EXECUTABLE)) { throw "Installed application not found" }
+          node scripts/desktop-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-installed-app-check
+          path: release/desktop-smoke.png
+          if-no-files-found: warn
