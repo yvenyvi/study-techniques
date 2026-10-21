@@ -201,6 +201,23 @@ class _SettingsPageState extends State<SettingsPage> {
         '${widget.store.rows('documents').length} PDFs · ${widget.store.rows('notes').length} notes · ${widget.store.rows('reviewers').length} reviewers',
         style: const TextStyle(color: muted),
       ),
+      const SizedBox(height: 24),
+      const Panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Dedication',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Dedicated to Ivory Frias, the developer’s beloved.',
+              style: TextStyle(color: muted, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      ),
     ],
   );
 }

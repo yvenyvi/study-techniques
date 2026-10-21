@@ -1420,3 +1420,12 @@ h3 {
     transform: none;
   }
 }
+.site-footer .dedication {
+  display: block;
+  margin-top: 7px;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.7;
+  color: #74806d;
+}

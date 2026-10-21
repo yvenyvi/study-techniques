@@ -64,16 +64,22 @@ export function useRecordDraft<T extends { id: string }>(
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lock = useRef(false);
   const saving = useRef<Promise<any>>(Promise.resolve());
+  const removing = useRef(false);
+  const [deleting, setDeleting] = useState(false);
   const [blocked, setBlocked] = useState(!!navigator.locks);
   const flush = async () => {
     clearTimeout(timer.current);
+    if (removing.current) return !pending.current;
     const value = pending.current;
     if (!value) return true;
     setStatus("Saving…");
     try {
       await (saving.current = saving.current
         .catch(() => {})
-        .then(() => db.table(table).put(value)));
+        .then(async () => {
+          const updated = await db.table(table).update(value.id, value);
+          if (!updated) throw Error("This item has been deleted.");
+        }));
       if (pending.current === value) {
         pending.current = undefined;
         setStatus("Saved");
@@ -141,14 +147,42 @@ export function useRecordDraft<T extends { id: string }>(
     });
   }, [blocker.state]);
   function change(next: T) {
-    if (blocked) return;
+    if (blocked || removing.current) return;
     setDraft(next);
     pending.current = next;
     setStatus("Unsaved");
     clearTimeout(timer.current);
     timer.current = setTimeout(flush, 450);
   }
-  return { draft, change, status, flush, blocked };
+  async function remove() {
+    if (blocked || !record)
+      throw Error("This item cannot be deleted from this tab.");
+    if (removing.current) return;
+    removing.current = true;
+    setDeleting(true);
+    clearTimeout(timer.current);
+    try {
+      // Finish any write already in flight, then discard the draft only after
+      // deletion succeeds. Cleanup and queued autosaves cannot recreate it.
+      await saving.current.catch(() => {});
+      await db.table(table).delete(record.id);
+      pending.current = undefined;
+      setStatus("Deleted");
+    } catch (error) {
+      removing.current = false;
+      setDeleting(false);
+      throw error;
+    }
+  }
+  return {
+    draft,
+    change,
+    status,
+    flush,
+    blocked: blocked || deleting,
+    deleting,
+    remove,
+  };
 }
 
 export function PageTitle({

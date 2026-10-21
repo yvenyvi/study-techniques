@@ -131,6 +131,22 @@ export const section = (kind: string): Section => ({
 export async function removeDocument(id: string) {
   await db.documents.delete(id);
 }
+export async function removeNote(id: string) {
+  const remove = () => db.notes.delete(id);
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    await navigator.locks.request(
+      `edit-notes-${id}`,
+      { ifAvailable: true },
+      async (lock) => {
+        if (!lock)
+          throw Error(
+            "This note is open in another tab. Close it before deleting.",
+          );
+        await remove();
+      },
+    );
+  } else await remove();
+}
 export async function removeCourse(id: string) {
   await db.transaction(
     "rw",

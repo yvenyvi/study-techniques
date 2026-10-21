@@ -32,6 +32,8 @@ Open the displayed localhost URL for the landing page, or `/app/` for the worksp
 4. Create a goal with an explicit completion criterion, link materials, and start a focus session. Ending the timer does not automatically complete your goal.
 5. Resume saved materials offline. Export a ZIP backup from Settings regularly.
 
+Use **Delete note** beside a Library/course note or at the top of its editor. Use **Delete PDF** on its Library card or in the reading workspace. Confirm the named item before removing it; deleting a PDF preserves its notes and reviewers. Notes open for editing in another tab must be closed before deleting them from Library.
+
 Home, Library/Course, Study Workspace, Reviewers/Practice, Goals & History, and Settings are connected application routes. The mobile workspace switches between reading and writing. Notes and reviewers support browser printing / Save as PDF.
 
 ## Data and limitations

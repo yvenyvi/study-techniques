@@ -161,6 +161,9 @@ function App() {
               }
             />
           </Routes>
+          <footer className="app-dedication">
+            Dedicated to Ivory Frias, the developer’s beloved.
+          </footer>
         </main>
         <FocusTimer />
       </div>

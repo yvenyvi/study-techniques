@@ -176,3 +176,9 @@ See [the iPad architecture](IPAD_ARCHITECTURE.md) for native pages, responsive t
 ## Delivery amendment: landing page and Vercel
 
 Deploy the web workspace and a public landing page together on Vercel. Public `/` explains the product and installation; `/app/` starts the existing study workflow. Preserve version-1 source references and offline behavior. Offer the installable browser app immediately, and add a native iPad download only after a signed, tested release exists. See [DEPLOYMENT.md](DEPLOYMENT.md) for the operational steps.
+
+## Material deletion and dedication
+
+Make deletion discoverable in Library, course notes, and the open PDF/note workspace. Require item-specific confirmation, preserve notes when deleting their PDF, and prevent autosave or another editor tab from recreating a deleted note. Use the same personal dedication in the landing page, web workspace, and native Settings: “Dedicated to Ivory Frias, the developer’s beloved.” Keep it outside student content and exports.
+
+Desktop installation was discussed as a future storage improvement. A proposed Tauri package would reuse the React interface with SQLite and a local PDF directory; installing the current PWA alone does not change its browser-managed storage. This remains a proposed next phase; see the implementation architecture for the boundary.

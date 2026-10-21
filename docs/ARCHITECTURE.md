@@ -88,3 +88,17 @@ Run `npm test`, `npm run build`, then `npm run test:e2e`. Development mode does 
 The static landing page (`index.html`, `src/landing.css`) explains the workflow, provides links to the workspace, and gives browser/PWA installation instructions. It does not read the student database. The React entry point is `app.html`, with router basename `/app`. Old workspace URLs normalize into the new path, including `/study/:id` links in existing backup files. The PWA starts at `/app/`; its root service worker also handles legacy source links offline. See [deployment and download status](DEPLOYMENT.md).
 
 Native download links must point to a verified signed release (TestFlight or App Store). Until one exists, the landing page labels the Flutter iPad companion as in development and links to the available web app. Vercel hosts static assets only; importing a PDF still stores it locally in IndexedDB.
+
+## Removing student materials
+
+Library and course note rows expose a labeled **Delete note** action. PDF cards and the open reading workspace expose **Delete PDF**. The same accessible native dialog names the selected item, explains what remains, focuses Cancel first, and supports Escape. Failed deletion leaves the dialog open with an error and retry available. These controls work offline.
+
+Deleting a PDF removes its local blob while preserving its notes, reviewers, and quotations. Deleting an open linked note keeps the PDF open and selects the next note; deleting a standalone note returns to Library. Library note deletion acquires the same Web Lock as the editor, preventing deletion while another tab owns that note. Editor deletion serializes with in-flight saves, stops queued autosaves, and clears the pending draft only after deletion succeeds. Autosave updates existing records instead of inserting missing records, so a late write cannot recreate a deleted note.
+
+The landing footer, shared web-workspace footer, and native iPad Settings include the dedication “Dedicated to Ivory Frias, the developer’s beloved.” This is interface text, outside student documents, printing, and backup data.
+
+## Desktop storage discussion — proposed next step
+
+A desktop PWA can be installed with the existing browser controls, but still stores PDFs and notes in browser-managed IndexedDB. Installation alone does not protect against clearing site data or browser eviction. Keep storage persistence requests and ZIP backups available.
+
+For a future desktop package, the proposed direction is Tauri with SQLite metadata and PDF files in the app's local data directory. Reuse the React interface after introducing a storage adapter; simply wrapping the current IndexedDB app would not achieve the intended storage change. Preserve the version-1 ZIP contract for transfer with web and iPad. Desktop packaging, installers, signing, migrations, and physical-device validation are not implemented in this change. Deleting the app's data or losing the device would still require an external backup.

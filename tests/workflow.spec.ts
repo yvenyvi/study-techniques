@@ -339,3 +339,241 @@ test("imports handle unreadable text, duplicates, invalid PDFs and file limits w
   await expect(page.getByRole("status")).toContainText("smaller than 50 MB");
   await expect(page.locator(".document-card")).toHaveCount(1);
 });
+
+test("Library deletion confirms the item, preserves PDF notes, and persists offline", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/app/library");
+  await page.locator("input[type=file]").setInputFiles({
+    name: "Removal reading.pdf",
+    mimeType: "application/pdf",
+    buffer: pdf(),
+  });
+  await page.getByRole("button", { name: "Create a note" }).click();
+  await page.getByLabel("Note title").fill("Keep this explanation");
+  await page
+    .locator(".tiptap")
+    .fill("My own explanation must survive removing its PDF.");
+  await expect(
+    page.getByRole("button", { name: "Saved", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Library", exact: true }).click();
+  const deletePDF = page.getByRole("button", {
+    name: "Delete PDF “Removal reading”",
+    exact: true,
+  });
+  await deletePDF.click();
+  const confirmation = page.getByRole("dialog", {
+    name: "Delete PDF?",
+    exact: true,
+  });
+  await expect(confirmation).toContainText("Its notes and reviewers will stay");
+  await expect(
+    confirmation.getByRole("button", { name: "Cancel", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(confirmation).not.toBeVisible();
+  await expect(page.locator(".document-card")).toHaveCount(1);
+  await deletePDF.click();
+  await confirmation
+    .getByRole("button", { name: "Delete PDF", exact: true })
+    .click();
+  await expect(page.locator(".document-card")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator(".note-row")).toContainText(
+    "Keep this explanation",
+  );
+  await page
+    .getByRole("link", { name: "Keep this explanation", exact: true })
+    .click();
+  await expect(page.locator(".tiptap")).toContainText(
+    "must survive removing its PDF",
+  );
+  await page.getByRole("link", { name: "Library", exact: true }).click();
+  await page.getByRole("button", { name: "New note", exact: true }).click();
+  await page.getByLabel("Note title").fill("Unrelated note");
+  await expect(
+    page.getByRole("button", { name: "Saved", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Library", exact: true }).click();
+  await expect(page.getByText("Ready for offline study")).toBeVisible();
+  await context.setOffline(true);
+  const deleteNote = page.getByRole("button", {
+    name: "Delete note “Keep this explanation”",
+    exact: true,
+  });
+  await deleteNote.click();
+  const noteDialog = page.getByRole("dialog", {
+    name: "Delete note?",
+    exact: true,
+  });
+  await expect(noteDialog).toContainText("Keep this explanation");
+  await noteDialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(deleteNote).toBeFocused();
+  await expect(page.locator(".note-row")).toHaveCount(2);
+  await deleteNote.click();
+  await noteDialog
+    .getByRole("button", { name: "Delete note", exact: true })
+    .click();
+  await expect(page.locator(".note-row")).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator(".note-row")).toContainText("Unrelated note");
+  await expect(
+    page.getByRole("link", { name: "Keep this explanation", exact: true }),
+  ).toHaveCount(0);
+});
+
+for (const viewport of [
+  { width: 1194, height: 834 },
+  { width: 390, height: 844 },
+]) {
+  test(`workspace deletes one linked note and its PDF independently at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/app/library");
+    await page.locator("input[type=file]").setInputFiles({
+      name: "Session.pdf",
+      mimeType: "application/pdf",
+      buffer: pdf(),
+    });
+    if (viewport.width < 700)
+      await page.getByRole("button", { name: "Notes", exact: true }).click();
+    await page.getByRole("button", { name: "Create a note" }).click();
+    await page.getByLabel("Note title").fill("First note");
+    await page.locator(".tiptap").fill("Keep this first note.");
+    await expect(
+      page.getByRole("button", { name: "Saved", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "New", exact: true }).click();
+    await expect(page.getByLabel("Choose note").locator("option")).toHaveCount(
+      2,
+    );
+    await expect(page.getByLabel("Note title")).toHaveValue("Session — notes");
+    await page.getByLabel("Note title").fill("Second note");
+    await page.locator(".tiptap").fill("Delete this second note.");
+    await page
+      .getByRole("button", { name: "Delete note “Second note”", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Delete note?", exact: true })
+      .getByRole("button", { name: "Delete note", exact: true })
+      .click();
+    await expect(page.getByLabel("Note title")).toHaveValue("First note");
+    await expect(page.locator(".tiptap")).toContainText("Keep this first note");
+    await expect(
+      page.getByRole("heading", { name: "Session", exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    if (viewport.width < 700)
+      await page.getByRole("button", { name: "Notes", exact: true }).click();
+    await expect(page.getByLabel("Choose note").locator("option")).toHaveCount(
+      1,
+    );
+    await page
+      .getByRole("button", { name: "Delete PDF “Session”", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog", {
+      name: "Delete PDF?",
+      exact: true,
+    });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await dialog
+      .getByRole("button", { name: "Delete PDF", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/app\/library$/);
+    await expect(page.locator(".document-card")).toHaveCount(0);
+    await expect(page.locator(".note-row")).toContainText("First note");
+    await expect(page.locator(".note-row")).toHaveCount(1);
+  });
+}
+
+test("deleting a note with failed autosave discards the draft without resurrecting it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (
+      ...args: Parameters<IDBObjectStore["put"]>
+    ) {
+      if (this.name === "notes" && (window as any).failSave)
+        throw new DOMException("Storage full", "QuotaExceededError");
+      return put.apply(this, args);
+    };
+  });
+  await page.goto("/app/library");
+  await page.getByRole("button", { name: "New note", exact: true }).click();
+  await expect(page.locator(".tiptap")).toHaveAttribute(
+    "contenteditable",
+    "true",
+  );
+  await page.evaluate(() => ((window as any).failSave = true));
+  await page
+    .locator(".tiptap")
+    .fill("Discard this unsaved draft when I confirm deletion.");
+  await expect(
+    page.getByRole("button", {
+      name: "Save failed — edits are still here. Retry.",
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Delete note “Untitled note”", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Delete note?", exact: true })
+    .getByRole("button", { name: "Delete note", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/app\/library$/);
+  await expect(page.locator(".note-row")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator(".note-row")).toHaveCount(0);
+});
+
+test("Library cannot delete another tab's open note, and deletion can be retried after closing it", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/app/library");
+  await page.getByRole("button", { name: "New note", exact: true }).click();
+  await expect(page.locator(".tiptap")).toHaveAttribute(
+    "contenteditable",
+    "true",
+  );
+  await page
+    .locator(".tiptap")
+    .fill("An open note is protected from deletion in another tab.");
+  await expect(
+    page.getByRole("button", { name: "Saved", exact: true }),
+  ).toBeVisible();
+  const library = await context.newPage();
+  await library.goto("/app/library");
+  await library
+    .getByRole("button", { name: "Delete note “Untitled note”", exact: true })
+    .click();
+  const dialog = library.getByRole("dialog", {
+    name: "Delete note?",
+    exact: true,
+  });
+  await dialog
+    .getByRole("button", { name: "Delete note", exact: true })
+    .click();
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "This note is open in another tab. Close it before deleting.",
+  );
+  await expect(page.locator(".tiptap")).toContainText(
+    "An open note is protected",
+  );
+  await page.close();
+  await dialog
+    .getByRole("button", { name: "Delete note", exact: true })
+    .click();
+  await expect(dialog).not.toBeVisible();
+  await expect(library.locator(".note-row")).toHaveCount(0);
+  await library.reload();
+  await expect(library.locator(".note-row")).toHaveCount(0);
+});

@@ -19,7 +19,16 @@ import {
   BookOpen,
   FileText,
 } from "lucide-react";
-import { db, uid, textOf, section, type Note, type Ref } from "./data";
+import {
+  db,
+  uid,
+  textOf,
+  section,
+  removeDocument,
+  type Note,
+  type Ref,
+} from "./data";
+import { DeleteButton } from "./delete";
 import { getDocument } from "./pdf";
 import { CourseSelect, report, useRecordDraft, flushEditors } from "./shared";
 export function RichEditor({
@@ -153,9 +162,6 @@ function WorkspaceInner({ id }: { id: string }) {
   const [params] = useSearchParams();
   const pageRequest = Number(params.get("page"));
   const navigate = useNavigate();
-  useEffect(() => {
-    if (notes?.length && !noteId) setNoteId(notes[0].id);
-  }, [notes, noteId]);
   async function newNote() {
     if (!(await flushEditors()))
       return report("Save your edits before opening another note.");
@@ -172,7 +178,7 @@ function WorkspaceInner({ id }: { id: string }) {
     setNoteId(n.id);
     setTab("notes");
   }
-  const note = notes?.find((n) => n.id === noteId);
+  const note = notes?.find((n) => n.id === noteId) || notes?.[0];
   return (
     <>
       <div className="workspace-heading">
@@ -186,7 +192,23 @@ function WorkspaceInner({ id }: { id: string }) {
               : doc?.title || "Document unavailable"}
           </h1>
         </div>
-        <span className="pill">YOUR OWN UNDERSTANDING</span>
+        <div className="actions workspace-actions">
+          <span className="pill">YOUR OWN UNDERSTANDING</span>
+          {doc && (
+            <DeleteButton
+              kind="PDF"
+              title={doc.title}
+              onDelete={async () => {
+                if (!(await flushEditors()))
+                  throw Error(
+                    "Save your notes before deleting this PDF. Your edits are still here.",
+                  );
+                await removeDocument(doc.id);
+                navigate("/library");
+              }}
+            />
+          )}
+        </div>
       </div>
       <div className="mobile-tabs">
         <button
@@ -259,7 +281,7 @@ function WorkspaceInner({ id }: { id: string }) {
           {notes && notes.length > 0 && (
             <select
               aria-label="Choose note"
-              value={noteId}
+              value={note?.id || ""}
               onChange={async (e) => {
                 const next = e.target.value;
                 if (!(await flushEditors()))
@@ -302,6 +324,10 @@ function WorkspaceInner({ id }: { id: string }) {
             <NoteEditor
               key={note.id}
               note={note}
+              onDeleted={() => {
+                setAddition(undefined);
+                if (standalone) navigate("/library");
+              }}
               onAdded={() => setAddition(undefined)}
               onReviewer={(text, refs) => {
                 setReviewRefs(refs);
@@ -436,10 +462,12 @@ function WorkspaceInner({ id }: { id: string }) {
 }
 function NoteEditor({
   note,
+  onDeleted,
   onAdded,
   onReviewer,
 }: {
   note: Note;
+  onDeleted: () => void;
   onAdded: () => void;
   onReviewer: (text: string, refs: Ref[]) => void;
 }) {
@@ -449,9 +477,10 @@ function NoteEditor({
     status,
     flush,
     blocked,
+    deleting,
+    remove,
   } = useRecordDraft(note, "notes");
   const [revision, setRevision] = useState(0);
-  const navigate = useNavigate();
   const current = useRef(n);
   current.current = n;
   const changeRef = useRef(change);
@@ -504,6 +533,18 @@ function NoteEditor({
   if (!n) return null;
   return (
     <div data-saving={status !== "Saved"}>
+      <div className="note-editor-heading">
+        <span className="eyebrow">YOUR NOTE</span>
+        <DeleteButton
+          kind="note"
+          title={n.title}
+          disabled={blocked}
+          onDelete={async () => {
+            await remove();
+            onDeleted();
+          }}
+        />
+      </div>
       <input
         className="note-title"
         aria-label="Note title"
@@ -530,7 +571,7 @@ function NoteEditor({
           {textOf(n.content).split(/\s+/).filter(Boolean).length} words
         </span>
       </div>
-      {blocked && (
+      {blocked && !deleting && (
         <p className="banner">
           Open in another tab. Close it and reload to edit here.
         </p>
@@ -547,19 +588,6 @@ function NoteEditor({
       <div className="actions note-actions">
         <button className="secondary" onClick={() => window.print()}>
           Print note / PDF
-        </button>
-        <button
-          className="danger"
-          disabled={blocked}
-          onClick={async () => {
-            if (confirm("Delete this note?")) {
-              await flush();
-              await db.notes.delete(n.id);
-              navigate("/library");
-            }
-          }}
-        >
-          Delete note
         </button>
       </div>
     </div>

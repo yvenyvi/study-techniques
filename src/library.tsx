@@ -7,20 +7,15 @@ import {
   importPDF,
   removeCourse,
   removeDocument,
+  removeNote,
   textOf,
   type Note,
   type Doc,
 } from "./data";
 import { PageTitle, CourseSelect, report } from "./shared";
 import { GoalRow } from "./goals";
-import {
-  Plus,
-  Upload,
-  ArrowUpRight,
-  Search,
-  FileText,
-  Trash2,
-} from "lucide-react";
+import { DeleteButton } from "./delete";
+import { Plus, Upload, ArrowUpRight, Search, FileText } from "lucide-react";
 export function Library({ courseView = false }: { courseView?: boolean }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -199,20 +194,6 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
       {courseView && (
         <>
           <section className="section">
-            <h2>Course notes</h2>
-            {notes
-              .filter((n) => n.courseId === id)
-              .map((n) => (
-                <Link
-                  className="material-row"
-                  key={n.id}
-                  to={`/study/note-${n.id}`}
-                >
-                  {n.title} ↗
-                </Link>
-              ))}
-          </section>
-          <section className="section">
             <h2>Course reviewers</h2>
             {reviewers
               .filter((r) => r.courseId === id)
@@ -255,7 +236,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
       )}
       <section className="section">
         <div className="section-heading">
-          <h2>Your notes</h2>
+          <h2>{courseView ? "Course notes" : "Your notes"}</h2>
           <button
             className="secondary"
             onClick={async () => {
@@ -283,18 +264,29 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
                 .includes(query.toLowerCase()),
           )
           .map((n) => (
-            <Link
-              className="material-row"
-              key={n.id}
-              to={`/study/note-${n.id}`}
-            >
-              <FileText size={18} />
-              {n.title}
-              <ArrowUpRight size={16} />
-            </Link>
+            <NoteRow key={n.id} note={n} />
           ))}
       </section>
     </>
+  );
+}
+function NoteRow({ note }: { note: Note }) {
+  return (
+    <article
+      className="material-row note-row"
+      aria-label={`Note: ${note.title}`}
+    >
+      <Link className="note-row-link" to={`/study/note-${note.id}`}>
+        <FileText size={18} aria-hidden="true" />
+        <span>{note.title}</span>
+        <ArrowUpRight size={16} aria-hidden="true" />
+      </Link>
+      <DeleteButton
+        kind="note"
+        title={note.title}
+        onDelete={() => removeNote(note.id)}
+      />
+    </article>
   );
 }
 function DocumentCard({ doc }: { doc: Doc }) {
@@ -320,20 +312,11 @@ function DocumentCard({ doc }: { doc: Doc }) {
           <button className="text-button" onClick={() => setEdit(!edit)}>
             Edit details
           </button>
-          <button
-            className="icon-button"
-            aria-label={`Delete ${doc.title}`}
-            onClick={async () => {
-              if (
-                confirm(
-                  "Delete this PDF? Your notes and reviewers will be preserved.",
-                )
-              )
-                await removeDocument(doc.id);
-            }}
-          >
-            <Trash2 size={15} />
-          </button>
+          <DeleteButton
+            kind="PDF"
+            title={doc.title}
+            onDelete={() => removeDocument(doc.id)}
+          />
         </div>
         {edit && (
           <form
