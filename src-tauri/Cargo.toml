@@ -22,7 +22,7 @@ custom-protocol = ["tauri/custom-protocol"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", optional = true, features = [] }
+tauri = { version = "2", optional = true, features = ["devtools"] }
 tauri-plugin-dialog = { version = "2", optional = true }
 tauri-plugin-single-instance = { version = "2", optional = true }
 rusqlite = { version = "0.38", features = ["bundled"] }

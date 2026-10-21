@@ -15,6 +15,7 @@ async function launch() {
   processHandle = spawn(executable, [], {
     env: {
       ...process.env,
+      STUDY_ROOM_VERIFY_WEBVIEW: "1",
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: "--remote-debugging-port=9222",
       WEBVIEW2_USER_DATA_FOLDER: join(
         process.env.RUNNER_TEMP,

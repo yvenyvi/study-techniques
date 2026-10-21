@@ -50,6 +50,18 @@ mod desktop {
     }
 
     pub fn run() {
+        let mut context = tauri::generate_context!();
+        // CI must opt in explicitly. Ordinary installed launches keep developer
+        // tools and remote debugging disabled, as defined in tauri.conf.json.
+        #[cfg(target_os = "windows")]
+        if std::env::var("STUDY_ROOM_VERIFY_WEBVIEW").as_deref() == Ok("1") {
+            for window in &mut context.config_mut().app.windows {
+                window.additional_browser_args = Some("--remote-debugging-port=9222".into());
+                window.devtools = Some(true);
+                window.data_directory =
+                    Some(std::env::temp_dir().join("study-room-verification-webview"));
+            }
+        }
         tauri::Builder::default()
             .plugin(tauri_plugin_single_instance::init(|app, _, _| {
                 if let Some(window) = app.get_webview_window("main") {
@@ -74,7 +86,7 @@ mod desktop {
                 storage_location,
                 save_backup
             ])
-            .run(tauri::generate_context!())
+            .run(context)
             .expect("Could not start Study Room");
     }
 }
