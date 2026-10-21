@@ -48,6 +48,8 @@ flowchart TD
 
 ## Backup contract and recovery
 
+The web/Windows document editor also supports tables, highlights, font styling, alignment, and flowing columns. Native Quill cannot round-trip all of these structures. `needsDocumentEditor` detects unsupported notes and opens a read-only preview, including table text. Body edits and excerpt insertion are blocked for these notes; title/course edits preserve the original JSON. ZIP export/restore retains every original formatting node and attribute. Use the current web app or Windows 1.2+ to edit these documents until native support is implemented.
+
 The archive is the existing web format: `manifest.json` with `version: 1` and collections `courses`, `documents`, `notes`, `reviewers`, `goals`, `sessions`, `settings`, plus `pdfs/<document-id>.pdf`. PDF blobs are separate from document metadata. Unsupported versions, malformed records, invalid PDFs, and archive limits are checked before restoring. The destination must be empty, and restoring commits in one database transaction.
 
 Limits match the web application: 50 MB per PDF/entry, 250 MB ZIP, and 512 MB expanded content. Active timers are not transferred. There is no automatic sync, account, merge behavior, or server.

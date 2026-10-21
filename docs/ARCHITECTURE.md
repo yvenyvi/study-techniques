@@ -48,6 +48,18 @@ flowchart TD
 
 ## Data model
 
+### Document editor
+
+`src/editor.tsx` owns the shared note editor and accessible formatting controls; `src/editor-schema.ts` defines its Tiptap schema, and `src/editor.css` styles the document and print layout. PDF-linked and standalone notes use the same editor and existing serialized autosave/Web Lock lifecycle.
+
+The toolbar supports headings, system font families and point sizes, bold/italic/underline/strikethrough, text color, five highlight colors, alignment, bullet/numbered lists, quotations, links, and undo/redo. Tables support configurable initial dimensions, header rows, resizing, adding/removing rows and columns, merging/splitting cells, and deletion. Structural table actions form independent undo steps. Browser shortcuts and paste use Tiptap's normal editing behavior.
+
+Document-level `doc.attrs.columns` stores one, two, or three flowing columns; older notes default to one. Below a 520px editor width the screen displays one column while preserving the saved layout. Print uses the saved column count and retains highlights and table borders. This is a continuous document editor with browser PDF printing; DOCX import/export and Word-style pagination are not implemented.
+
+Notes retain their complete Tiptap JSON, including `textStyle`/`highlight` marks and table nodes, through IndexedDB, native SQLite, and version-1 ZIP backups. No database schema change is needed. All extensions and styles are bundled for offline use; font choices use installed system fonts. Editor permission changes do not mark a note as edited.
+
+The in-development native iPad editor cannot round-trip advanced document formatting. It detects unsupported notes and opens a read-only preview with table text, preserving the original JSON during title edits and ZIP transfer. Edit these documents on the current web app or Windows 1.2+. Upgrade older Windows installations before opening rich notes from a newer app.
+
 All entities use UUIDs. Dexie database `study-room`, version 1, contains:
 
 | Entity       | Key relationships and contents                                                              |

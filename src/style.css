@@ -898,23 +898,6 @@ nav a:hover {
   border-bottom: 1px solid var(--line);
   margin-bottom: 12px;
 }
-.editor-tools {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 8px;
-}
-.editor-tools button {
-  padding: 6px 8px;
-  background: #f4f5ed;
-  color: #6e7e64;
-  font-size: 11px;
-  border: 0;
-}
-.editor-tools button.active {
-  background: #dce8d4;
-}
 .tiptap {
   outline: none;
   min-height: 390px;

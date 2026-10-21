@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:study_room/data/store.dart';
 import 'package:study_room/main.dart';
+import 'package:study_room/data/models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +45,56 @@ void main() {
     }
     await pdfrxFlutterInitialize();
   });
+  testWidgets(
+    'advanced notes open read-only and title edits preserve formatting',
+    (tester) async {
+      tester.view.physicalSize = const Size(1194, 834);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final store = await StudyStore.open(
+        factory: databaseFactoryFfiNoIsolate,
+        path: inMemoryDatabasePath,
+      );
+      final rich = jsonDecode(
+        File('../tests/fixtures/rich-note.json').readAsStringSync(),
+      ) as Json;
+      final note = newNote(title: 'Rich psychology note');
+      note['content'] = rich;
+      await store.put('notes', note);
+      await tester.pumpWidget(StudyRoomApp(store: store));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Library').first);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Rich psychology note').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rich psychology note').first);
+      await tester.pumpAndSettle();
+      final editor = tester.widget<quill.QuillEditor>(
+        find.byType(quill.QuillEditor),
+      );
+      expect(editor.controller.readOnly, isTrue);
+      expect(
+        editor.controller.document.toPlainText(),
+        contains('Mental processes'),
+      );
+      expect(find.textContaining('Rich note preview.'), findsOneWidget);
+      expect(find.byType(quill.QuillSimpleToolbar), findsNothing);
+      final title = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.labelText == 'Note title',
+      );
+      await tester.enterText(title, 'My psychology study note');
+      await tester.runAsync(() => store.flushEditors());
+      expect(
+        store.find('notes', note['id'])!['title'],
+        'My psychology study note',
+      );
+      expect(store.find('notes', note['id'])!['content'], rich);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await store.close();
+    },
+  );
   for (final size in [
     const Size(1194, 834),
     const Size(834, 1194),

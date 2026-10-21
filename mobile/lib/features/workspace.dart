@@ -440,6 +440,7 @@ class NoteEditorState extends State<NoteEditor> {
   late quill.QuillController editor;
   late TextEditingController title;
   late StreamSubscription<dynamic> changes;
+  late bool documentPreview;
   static void insertInto(
     String id,
     String quote,
@@ -455,13 +456,16 @@ class NoteEditorState extends State<NoteEditor> {
     super.initState();
     draft = DraftSaver(widget.store, 'notes', widget.initial);
     title = TextEditingController(text: labelOf(widget.initial));
+    documentPreview = needsDocumentEditor(widget.initial['content'] as Json);
     editor = quill.QuillController(
       document: quill.Document.fromDelta(
         toDelta(widget.initial['content'] as Json),
       ),
       selection: const TextSelection.collapsed(offset: 0),
+      readOnly: documentPreview,
     );
     changes = editor.document.changes.listen((_) {
+      if (documentPreview) return;
       draft.change({
         ...draft.value,
         'content': fromDelta(editor.document.toDelta()),
@@ -472,6 +476,13 @@ class NoteEditorState extends State<NoteEditor> {
   }
 
   void _insert(String quote, String doc, int page, String name) {
+    if (documentPreview) {
+      notice(
+        context,
+        'Open this rich note on the web or Windows to add an excerpt.',
+      );
+      return;
+    }
     final offset = editor.document.length - 1;
     editor.replaceText(
       offset,
@@ -677,7 +688,16 @@ class NoteEditorState extends State<NoteEditor> {
                   ),
                 ],
               ),
-              if (!compact)
+              if (documentPreview)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Rich note preview. Edit its formatting on the web or Windows. '
+                    'This preview simplifies the layout; the original formatting stays intact in ZIP backups.',
+                    style: TextStyle(color: muted, fontSize: 11),
+                  ),
+                ),
+              if (!compact && !documentPreview)
                 SizedBox(
                   height: 48,
                   child: quill.QuillSimpleToolbar(

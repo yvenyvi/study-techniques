@@ -8,6 +8,7 @@ on:
         "src-tauri/**",
         "scripts/**",
         "tests-desktop/**",
+        "tests/**",
         "playwright.desktop.config.ts",
         "package*.json",
         "vite.config.ts",
@@ -23,6 +24,7 @@ on:
         "src-tauri/**",
         "scripts/**",
         "tests-desktop/**",
+        "tests/**",
         "playwright.desktop.config.ts",
         "package*.json",
         "vite.config.ts",
@@ -102,4 +104,4 @@ jobs:
       - name: Publish Windows preview
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create desktop-v1.1.1 release/* --target "$GITHUB_SHA" --prerelease --title "Study Room 1.1.1 — Timer preferences fix" --notes-file docs/DESKTOP_RELEASE.md
+        run: gh release create desktop-v1.2.0 release/* --target "$GITHUB_SHA" --prerelease --title "Study Room 1.2 — Document editor" --notes-file docs/DESKTOP_RELEASE.md

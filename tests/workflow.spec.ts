@@ -212,6 +212,9 @@ test("edit locks prevent another tab from overwriting a note", async ({
     "contenteditable",
     "false",
   );
+  await expect(
+    other.getByRole("button", { name: "Bold", exact: true }),
+  ).toBeDisabled();
   await page.close();
   await other.reload();
   await expect(other.locator(".tiptap")).toHaveAttribute(

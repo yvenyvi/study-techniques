@@ -1,0 +1,83 @@
+{
+  "type": "doc",
+  "attrs": { "columns": 2 },
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2, "textAlign": "center" },
+      "content": [
+        {
+          "type": "text",
+          "text": "Psychology connects evidence and understanding.",
+          "marks": [
+            { "type": "bold" },
+            { "type": "italic" },
+            { "type": "underline" },
+            { "type": "highlight", "attrs": { "color": "#f8d3e3" } },
+            {
+              "type": "textStyle",
+              "attrs": {
+                "fontFamily": "Georgia",
+                "fontSize": "14pt",
+                "color": "#3344aa"
+              }
+            },
+            { "type": "link", "attrs": { "href": "/study/doc-memory?page=1" } }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [{ "type": "text", "text": "Theory" }]
+                }
+              ]
+            },
+            {
+              "type": "tableHeader",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [{ "type": "text", "text": "Description" }]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [{ "type": "text", "text": "Cognitive" }]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [{ "type": "text", "text": "Mental processes" }]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    { "type": "paragraph" }
+  ]
+}

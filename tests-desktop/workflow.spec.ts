@@ -6,6 +6,7 @@ import { unzipSync, strFromU8 } from "fflate";
 import { openBridge } from "./bridge";
 import { pdf } from "./pdf.mjs";
 import { checkTimerPreferences } from "../tests/timer-preferences-flow.mjs";
+import { checkRichEditor } from "../tests/editor-flow.mjs";
 
 test("desktop UI uses real native storage, survives browser-data removal, and exports a transferable ZIP", async ({
   page,
@@ -102,6 +103,9 @@ test("desktop UI uses real native storage, survives browser-data removal, and ex
       page.getByRole("button", { name: "Request persistent storage" }),
     ).toHaveCount(0);
     await checkTimerPreferences(page);
+    await page.goto(workspace);
+    await checkRichEditor(page);
+    await page.getByRole("link", { name: "Settings & data" }).click();
     await page.getByRole("button", { name: "Export backup" }).click();
     await expect
       .poll(async () => {

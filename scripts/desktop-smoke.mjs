@@ -6,6 +6,7 @@ import { resolve, join } from "node:path";
 import { access, mkdir, readdir } from "node:fs/promises";
 import { pdf } from "../tests-desktop/pdf.mjs";
 import { checkTimerPreferences } from "../tests/timer-preferences-flow.mjs";
+import { checkRichEditor, assertRichNote } from "../tests/editor-flow.mjs";
 if (process.platform !== "win32")
   throw Error("This smoke check requires Windows.");
 const executable =
@@ -185,9 +186,31 @@ try {
     page.getByRole("button", { name: "Request persistent storage" }),
   ).toHaveCount(0);
   await checkTimerPreferences(page);
+  await page
+    .getByRole("link", { name: "Library", exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole("link", { name: "Windows native smoke check", exact: false })
+    .click();
+  await checkRichEditor(page);
+  await close(page);
+  page = await launch();
+  await page
+    .getByRole("link", { name: "Library", exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole("link", { name: "Windows native smoke check", exact: false })
+    .click();
+  await assertRichNote(page);
+  await page.screenshot({
+    path: "release/desktop-smoke-editor.png",
+    fullPage: true,
+  });
   await close(page);
   console.log(
-    "Actual Windows app: install, PDF import/render, native note save, reopen, storage controls, and timer preferences passed.",
+    "Actual Windows app: install, PDF import/render, native notes, reopen, storage controls, timer preferences, and document formatting passed.",
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

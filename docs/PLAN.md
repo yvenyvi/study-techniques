@@ -31,6 +31,8 @@ These are routes within one application. Main navigation contains Home, Library,
 
 ### Study workspace
 
+- Notes use a document-style toolbar for text formatting, highlights, tables, and saved one-/two-/three-column layouts. Keep formatting in structured content through offline saves and ZIP backups. See the document editor section of [ARCHITECTURE.md](ARCHITECTURE.md) for platform support and behavior.
+
 - On laptops, show the PDF and notes side by side with an adjustable divider.
 - On phones, switch between PDF and notes using tabs.
 - PDF controls include page navigation, zoom, text selection, and resume position.

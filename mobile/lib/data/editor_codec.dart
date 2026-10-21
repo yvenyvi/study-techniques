@@ -2,6 +2,39 @@ import 'package:dart_quill_delta/dart_quill_delta.dart';
 
 import 'models.dart';
 
+// Quill cannot round-trip every node/attribute supported by the document editor.
+// Keep these notes read-only here; store/export their original JSON unchanged.
+bool needsDocumentEditor(Json content) {
+  const nodes = {
+    'doc',
+    'paragraph',
+    'heading',
+    'text',
+    'bulletList',
+    'orderedList',
+    'listItem',
+    'blockquote',
+    'horizontalRule',
+    'hardBreak',
+    'codeBlock',
+  };
+  const marks = {'bold', 'italic', 'underline', 'strike', 'code', 'link'};
+  bool visit(dynamic node) {
+    if (node is! Map || !nodes.contains(node['type'])) return true;
+    final attrs = node['attrs'] as Map? ?? {};
+    if ((attrs['columns'] ?? 1) != 1 ||
+        (attrs['textAlign'] != null && attrs['textAlign'] != 'left')) {
+      return true;
+    }
+    for (final mark in (node['marks'] as List? ?? [])) {
+      if (!marks.contains(mark['type'])) return true;
+    }
+    return (node['content'] as List? ?? []).any(visit);
+  }
+
+  return visit(content);
+}
+
 // Exchange format is Tiptap JSON, identical to the web backup. Native editing
 // uses Quill Delta; no generated HTML or platform-specific editor data is saved.
 Delta toDelta(Json content) {
@@ -9,6 +42,12 @@ Delta toDelta(Json content) {
   void block(Json node, [Map<String, dynamic> inherited = const {}]) {
     final type = node['type'];
     if (type == 'doc') {
+      for (final child in (node['content'] as List? ?? [])) {
+        block(Map<String, dynamic>.from(child));
+      }
+      return;
+    }
+    if (['table', 'tableRow', 'tableCell', 'tableHeader'].contains(type)) {
       for (final child in (node['content'] as List? ?? [])) {
         block(Map<String, dynamic>.from(child));
       }

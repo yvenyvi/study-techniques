@@ -7,9 +7,6 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useLiveQuery } from "./storage/live";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
 import { TextLayer, type PDFDocumentProxy } from "pdfjs-dist";
 import "pdfjs-dist/web/pdf_viewer.css";
 import {
@@ -32,118 +29,7 @@ import {
 import { DeleteButton } from "./delete";
 import { getDocument } from "./pdf";
 import { CourseSelect, report, useRecordDraft, flushEditors } from "./shared";
-export function RichEditor({
-  content,
-  onChange,
-  disabled = false,
-  onExcerpt,
-}: {
-  content: any;
-  onChange: (v: any) => void;
-  disabled?: boolean;
-  onExcerpt?: (v: string, refs: Ref[]) => void;
-}) {
-  const navigate = useNavigate();
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ link: { openOnClick: false } }),
-      Placeholder.configure({ placeholder: "Explain it in your own words…" }),
-    ],
-    content,
-    editable: !disabled,
-    onUpdate: ({ editor }) => onChange(editor.getJSON()),
-  });
-  useEffect(() => {
-    editor?.setEditable(!disabled);
-  }, [disabled, editor]);
-  return (
-    <>
-      <div className="editor-tools">
-        <button
-          disabled={disabled}
-          className={editor?.isActive("bold") ? "active" : ""}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-        >
-          <b>B</b>
-        </button>
-        <button
-          disabled={disabled}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-        >
-          <i>I</i>
-        </button>
-        <button
-          disabled={disabled}
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-        >
-          H2
-        </button>
-        <button
-          disabled={disabled}
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-        >
-          List
-        </button>
-        <button
-          disabled={disabled}
-          onClick={() => editor?.chain().focus().undo().run()}
-        >
-          Undo
-        </button>
-        {onExcerpt && (
-          <button
-            disabled={disabled}
-            onClick={() => {
-              if (editor) {
-                const { from, to } = editor.state.selection;
-                const selected = editor.state.doc.textBetween(from, to, " ");
-                if (selected) {
-                  const refs: Ref[] = [];
-                  editor.state.doc.nodesBetween(from, to, (node) => {
-                    for (const mark of node.marks) {
-                      const match = String(mark.attrs.href || "").match(
-                        /^\/study\/([^?]+)\?page=(\d+)/,
-                      );
-                      if (
-                        match &&
-                        !refs.some(
-                          (r) =>
-                            r.documentId === match[1] &&
-                            r.page === Number(match[2]),
-                        )
-                      )
-                        refs.push({
-                          documentId: match[1],
-                          page: Number(match[2]),
-                          quote: selected,
-                        });
-                    }
-                  });
-                  onExcerpt(selected, refs);
-                } else report("Select some note text first.");
-              }
-            }}
-          >
-            Add selection to reviewer
-          </button>
-        )}
-      </div>
-      <EditorContent
-        editor={editor}
-        onClick={(event) => {
-          const anchor = (event.target as HTMLElement).closest("a");
-          const href = anchor?.getAttribute("href") || "";
-          if (/^\/(?:app\/)?study\//.test(href)) {
-            event.preventDefault();
-            navigate(href.replace(/^\/app/, ""));
-          }
-        }}
-      />
-    </>
-  );
-}
+import { RichEditor } from "./editor";
 export function Workspace() {
   const { id } = useParams();
   return <WorkspaceInner key={id} id={id!} />;

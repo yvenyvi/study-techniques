@@ -80,6 +80,25 @@ void main() {
     expect(store.rows('documents'), isEmpty);
   });
   test(
+    'advanced web notes retain their original JSON through preview and backup',
+    () async {
+      final rich = jsonDecode(
+        await File('../tests/fixtures/rich-note.json').readAsString(),
+      ) as Json;
+      expect(needsDocumentEditor(rich), isTrue);
+      expect(toDelta(rich).toString(), contains('Mental processes'));
+      final note = newNote(title: 'Rich psychology note');
+      note['content'] = rich;
+      await store.put('notes', note);
+      final bytes = await BackupService(store).export();
+      await store.db.delete('records');
+      await store.reload();
+      await BackupService(store).restore(bytes);
+      expect(store.find('notes', note['id'])!['content'], rich);
+      expect(needsDocumentEditor(newNote()['content'] as Json), isFalse);
+    },
+  );
+  test(
     'rich notes retain formatting and page references across editor codecs',
     () {
       final note = {
