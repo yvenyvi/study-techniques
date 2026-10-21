@@ -70,10 +70,21 @@ jobs:
           Copy-Item src-tauri/target/release/bundle/nsis/*-setup.exe release/Study-Room-Windows-x64-Setup.exe
           $hash = (Get-FileHash release/Study-Room-Windows-x64-Setup.exe -Algorithm SHA256).Hash.ToLower()
           "$hash  Study-Room-Windows-x64-Setup.exe" | Out-File -Encoding ascii release/SHA256SUMS.txt
+      - name: Install and verify the Windows package
+        shell: pwsh
+        run: ./scripts/check-desktop-installer.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-native-window
+          path: release/desktop-smoke*.png
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: Study-Room-Windows-x64
-          path: release/*
+          path: |
+            release/Study-Room-Windows-x64-Setup.exe
+            release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
   publish:

@@ -68,7 +68,7 @@ npm run desktop:dev
 npm run desktop:build -- --bundles nsis
 ```
 
-The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run uploads `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums. A manually dispatched publish run creates the `desktop-v1.1.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
+The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run installs and verifies its exact package before uploading `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.1.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
 
 ## Verification
 
