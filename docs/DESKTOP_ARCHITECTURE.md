@@ -68,7 +68,7 @@ npm run desktop:dev
 npm run desktop:build -- --bundles nsis
 ```
 
-The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run installs and verifies its exact package before uploading `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.1.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
+The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run installs and verifies its exact package before uploading `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.1.1` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
 
 ## Verification
 
@@ -88,3 +88,9 @@ Rust tests verify reopen persistence, SQL/file rollback, PDF deletion semantics,
 [Release verification run](https://github.com/yvenyvi/study-techniques/actions/runs/39546961334) built the NSIS package and installed that exact installer on a Windows runner. The actual WebView2 app imported and displayed a PDF, saved a linked rich note through the native commands, closed, reopened, recovered both note and PDF from the native library, and reported no IndexedDB databases. Native Settings showed installed offline assets and omitted browser persistence controls.
 
 Supporting checks passed: 9 shared data/unit tests, 5 Rust persistence tests, 5 TypeScript-to-Rust/SQLite integration tests, 17 web browser workflows, and the desktop browser-to-native-storage workflow. The landing page was checked at 1440, 834, and 390 pixels with no horizontal overflow or browser page errors. Web and desktop production builds passed. The initial release remains an unsigned preview pending normal use on a student's Windows device.
+
+### Timer preferences fix — version 1.1.1
+
+[The 1.1.1 Windows verification run](https://github.com/yvenyvi/study-techniques/actions/runs/39556198475) passed the installed-app check, including saved focus/break durations, reload recovery, and preservation of running/paused progress. Shared code normalizes older idle timer records and saves preferences plus idle countdown changes atomically. Settings observes saved preference values so unrelated native timer writes cannot reset form edits. The progress ring uses the active phase's original duration.
+
+Supporting checks passed: 16 shared unit/data tests, 6 TypeScript-to-Rust/SQLite integration tests, 18 web browser workflows, and the desktop browser-to-native-storage workflow. The timer preference flow also passed against the live Vercel web app. Install 1.1.1 over the existing Windows preview to receive this fix; the native library location and storage schema are unchanged.
