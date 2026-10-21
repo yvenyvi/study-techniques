@@ -1,0 +1,184 @@
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.page-guide-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  background: #eff3e9;
+  color: #35594b;
+  border: 1px solid #dce5d5;
+  padding: 8px 11px;
+  font-size: 11px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.page-guide-layer {
+  position: relative;
+  z-index: 1000;
+}
+.page-guide-highlight {
+  position: fixed;
+  pointer-events: none;
+  border: 3px solid #648b6c;
+  border-radius: 11px;
+  box-shadow: 0 0 0 9999px #26372520;
+  box-sizing: border-box;
+}
+.page-guide-card {
+  position: fixed;
+  width: min(360px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  box-sizing: border-box;
+  background: #fffefa;
+  color: #314a3c;
+  border: 1px solid #d6e2ce;
+  border-radius: 14px;
+  box-shadow: 0 12px 60px #1c352c30;
+  padding: 19px;
+  font-size: 13px;
+}
+.page-guide-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.page-guide-step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.page-guide-show {
+  background: transparent;
+  color: #45603b;
+  padding: 5px;
+  font-size: 10px;
+  text-decoration: underline;
+}
+.page-guide-topline > span {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #637959;
+}
+.page-guide-close {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #637959;
+  padding: 5px;
+  min-width: 30px;
+  min-height: 30px;
+  border: 0;
+}
+.page-guide-card h2 {
+  margin: 6px 0 9px;
+  font-size: 19px;
+  line-height: 1.25;
+  color: #29483a;
+}
+.page-guide-card p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.page-guide-card .page-guide-counter {
+  margin: 5px 0;
+  font-size: 10px;
+  color: #74846c;
+}
+.page-guide-try {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 7px;
+  background: #f0f4e9;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.page-guide-try svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.page-guide-try.tried {
+  background: #e8f3e5;
+  color: #315a35;
+}
+.page-guide-actions,
+.page-guide-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.page-guide-actions {
+  justify-content: space-between;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+.page-guide-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 8px 9px;
+  font-size: 11px;
+}
+.page-guide-actions .page-guide-skip {
+  padding-left: 0;
+  background: transparent;
+  color: #64775b;
+}
+.page-guide-actions .page-guide-back {
+  background: #eff3e9;
+  color: #45603b;
+}
+.page-guide-actions .page-guide-back:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.page-guide-next {
+  background: #35594b;
+  color: white;
+}
+.page-guide-card small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #78856f;
+}
+@media (max-width: 600px) {
+  .topbar-actions {
+    gap: 8px;
+  }
+  .page-guide-button {
+    min-height: 40px;
+    padding: 8px;
+  }
+  .page-guide-card {
+    padding: 16px;
+    max-height: min(62dvh, 430px);
+  }
+  .page-guide-actions button {
+    min-height: 40px;
+  }
+  .topbar > span:first-child {
+    min-width: 0;
+  }
+}
+@media print {
+  .page-guide-layer,
+  .page-guide-button {
+    display: none !important;
+  }
+}

@@ -30,6 +30,7 @@ import { Library } from "./library";
 import { Reviewers, ReviewerPage } from "./reviewers";
 import { Goals } from "./goals";
 import { Settings } from "./settings";
+import { PageGuides } from "./guides";
 import "./style.css";
 function App() {
   const [notice, setNotice] = useState("");
@@ -129,9 +130,12 @@ function App() {
       <div className="main-shell">
         <header className="topbar">
           <span>YOUR SPACE TO LEARN, AT YOUR PACE</span>
-          <span className="profile">
-            PS <span>Psychology student</span>
-          </span>
+          <div className="topbar-actions">
+            <PageGuides />
+            <span className="profile">
+              PS <span>Psychology student</span>
+            </span>
+          </div>
         </header>
         {update && (
           <div className="banner">

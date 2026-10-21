@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "./storage/live";
 import { db, uid, type Goal } from "./data";
 import { PageTitle, CourseSelect, report } from "./shared";
+import { GuidePage } from "./guides";
 import { Plus, Check, Target } from "lucide-react";
 export function GoalRow({ goal: g }: { goal: Goal }) {
   return (
@@ -70,12 +71,14 @@ export function Goals() {
   const reviewers = useLiveQuery(() => db.reviewers.toArray(), []) || [];
   return (
     <>
+      <GuidePage id="goals" />
       <PageTitle
         eyebrow="PROGRESS WITH PURPOSE"
         title="Small goals. Meaningful progress."
         description="Decide what finished looks like before you begin."
       />
       <form
+        data-guide="goal-form"
         className="panel goal-form"
         onSubmit={async (e) => {
           e.preventDefault();
@@ -115,7 +118,7 @@ export function Goals() {
             />
           </label>
         </div>
-        <div className="toolbar">
+        <div className="toolbar" data-guide="goal-materials">
           <CourseSelect value={course} onChange={setCourse} />
           <label>
             Linked materials
@@ -150,7 +153,7 @@ export function Goals() {
           </button>
         </div>
       </form>
-      <section className="section">
+      <section className="section" data-guide="goal-list">
         <h2>Your goals</h2>
         {goals.length ? (
           goals.map((g) => <GoalRow key={g.id} goal={g} />)
@@ -158,7 +161,7 @@ export function Goals() {
           <p className="muted">Your first small step starts above.</p>
         )}
       </section>
-      <section className="section">
+      <section className="section" data-guide="focus-history">
         <h2>Focus history</h2>
         {sessions.length ? (
           sessions.map((s) => (

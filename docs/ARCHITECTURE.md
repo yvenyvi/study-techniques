@@ -60,6 +60,14 @@ Notes retain their complete Tiptap JSON, including `textStyle`/`highlight` marks
 
 The in-development native iPad editor cannot round-trip advanced document formatting. It detects unsupported notes and opens a read-only preview with table text, preserving the original JSON during title edits and ZIP transfer. Edit these documents on the current web app or Windows 1.2+. Upgrade older Windows installations before opening rich notes from a newer app.
 
+### Interactive page guides
+
+`src/guides.tsx` renders non-modal guided tips; `src/guides-content.ts` holds the student-facing steps, and `src/guides-progress.ts` owns first-visit flags. Hidden `GuidePage` markers identify Overview, Library, Course, PDF workspace, standalone Notes, Reviewers, Reviewer editor, Practice, Goals & history, and Settings. Each type is introduced once per browser/WebView profile, rather than once for every individual course or note.
+
+Guides highlight actual controls, offer optional hands-on tasks, and support Back/Next, Skip/Close, Escape, keyboard navigation, and Show me. They leave the page interactive and never create, delete, fill, or start anything on the student's behalf. PDF/Notes view tabs may switch to make the described controls visible. Empty or hidden targets use visible fallbacks. Geometry updates for scrolling, resizing, and the visual viewport; guides are hidden when printing. Route observers are cleaned up synchronously so navigation cannot consume a guide before it appears.
+
+The first display marks a guide as seen, including when the student skips or navigates away. Page guide in the header replays the current guide. Settings → Show all guides again resets these flags for subsequent page visits. Flags use the separate `study-room-page-guides:v1` localStorage key, with an in-memory fallback if unavailable. They are excluded from study tables and ZIPs, so visiting a guide does not prevent restoring into an empty workspace. Clearing browser/WebView data can reset introductions without changing the Windows SQLite library. Guides and progress work offline. This implementation covers the released web and Windows interfaces; the in-development native Flutter interface does not yet include these walkthroughs.
+
 All entities use UUIDs. Dexie database `study-room`, version 1, contains:
 
 | Entity       | Key relationships and contents                                                              |

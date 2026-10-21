@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "./storage/live";
 import { db, uid, templates, section, type Reviewer } from "./data";
 import { PageTitle, CourseSelect, Source, useRecordDraft } from "./shared";
+import { GuidePage } from "./guides";
 import { Plus, BookOpen, Search, Download, Trash2 } from "lucide-react";
 export function Reviewers() {
   const navigate = useNavigate();
@@ -15,12 +16,14 @@ export function Reviewers() {
     ) || [];
   return (
     <>
+      <GuidePage id="reviewers" />
       <PageTitle
         eyebrow="CONNECT • UNDERSTAND • REMEMBER"
         title="In your own words."
         description="Turn your notes into something you can return to."
       >
         <button
+          data-guide="new-reviewer"
           onClick={async () => {
             const r: Reviewer = {
               id: uid(),
@@ -38,7 +41,7 @@ export function Reviewers() {
           New reviewer
         </button>
       </PageTitle>
-      <div className="toolbar">
+      <div className="toolbar" data-guide="reviewer-search">
         <label className="search">
           <Search size={18} />
           <input
@@ -49,7 +52,7 @@ export function Reviewers() {
         </label>
         <CourseSelect value={course} onChange={setCourse} filter />
       </div>
-      <div className="document-grid">
+      <div className="document-grid" data-guide="reviewer-list">
         {items
           .filter(
             (r) =>
@@ -111,6 +114,7 @@ function ReviewerContent({ id }: { id: string }) {
     change({ ...r, ...fields, updated: Date.now() });
   return (
     <div data-saving={status !== "Saved"}>
+      <GuidePage id={practice ? "practice" : "reviewer"} />
       <PageTitle
         eyebrow="YOUR PERSONAL REVIEWER"
         title={practice ? r.title : "Build your understanding"}
@@ -118,6 +122,7 @@ function ReviewerContent({ id }: { id: string }) {
       >
         <div className="actions">
           <button
+            data-guide="reviewer-mode"
             className="secondary"
             onClick={() => {
               flush();
@@ -147,7 +152,7 @@ function ReviewerContent({ id }: { id: string }) {
           reload to edit here.
         </p>
       )}
-      <div className="editor-meta no-print">
+      <div className="editor-meta no-print" data-guide="reviewer-details">
         <label>
           Reviewer title
           <input
@@ -172,7 +177,7 @@ function ReviewerContent({ id }: { id: string }) {
           {status}
         </button>
       </div>
-      <div className="reviewer-sections">
+      <div className="reviewer-sections" data-guide="reviewer-sections">
         {r.sections.map((s) => (
           <section className="panel reviewer-section" key={s.id}>
             <div className="section-heading">
@@ -199,6 +204,7 @@ function ReviewerContent({ id }: { id: string }) {
                   <div>
                     {key === "Answer" && !revealed.has(s.id) ? (
                       <button
+                        data-guide="reveal-answer"
                         className="secondary"
                         onClick={() =>
                           setRevealed(new Set([...revealed, s.id]))
@@ -244,7 +250,7 @@ function ReviewerContent({ id }: { id: string }) {
         ))}
       </div>
       {!practice && (
-        <div className="panel no-print">
+        <div className="panel no-print" data-guide="reviewer-templates">
           <h3>Add a section</h3>
           <div className="actions wrap">
             {Object.keys(templates).map((kind) => (

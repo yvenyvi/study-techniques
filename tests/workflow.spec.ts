@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 function pdf() {
   const parts = ["%PDF-1.4\n"];
   const offsets = [0];

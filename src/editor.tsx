@@ -173,6 +173,7 @@ function DocumentToolbar({
     <>
       <fieldset
         className="document-toolbar editor-tools"
+        data-guide="editor-toolbar"
         disabled={disabled}
         aria-label="Document formatting"
       >

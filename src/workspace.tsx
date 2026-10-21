@@ -30,16 +30,18 @@ import { DeleteButton } from "./delete";
 import { getDocument } from "./pdf";
 import { CourseSelect, report, useRecordDraft, flushEditors } from "./shared";
 import { RichEditor } from "./editor";
+import { GuidePage } from "./guides";
 export function Workspace() {
   const { id } = useParams();
   return <WorkspaceInner key={id} id={id!} />;
 }
 function WorkspaceInner({ id }: { id: string }) {
   const standalone = id.startsWith("note-");
-  const doc = useLiveQuery(
-    () => (standalone ? undefined : db.documents.get(id)),
+  const docRecord = useLiveQuery(
+    async () => (standalone ? null : (await db.documents.get(id)) || null),
     [id],
   );
+  const doc = docRecord || undefined;
   const notes = useLiveQuery(
     () =>
       standalone
@@ -61,6 +63,14 @@ function WorkspaceInner({ id }: { id: string }) {
   const [params] = useSearchParams();
   const pageRequest = Number(params.get("page"));
   const navigate = useNavigate();
+  useEffect(() => {
+    const show = (event: Event) => {
+      const panel = (event as CustomEvent).detail;
+      if (panel === "pdf" || panel === "notes") setTab(panel);
+    };
+    window.addEventListener("guide-show-panel", show);
+    return () => window.removeEventListener("guide-show-panel", show);
+  }, []);
   async function newNote() {
     if (!(await flushEditors()))
       return report("Save your edits before opening another note.");
@@ -80,7 +90,10 @@ function WorkspaceInner({ id }: { id: string }) {
   const note = notes?.find((n) => n.id === noteId) || notes?.[0];
   return (
     <>
-      <div className="workspace-heading">
+      {notes !== undefined &&
+        (standalone || docRecord !== undefined) &&
+        (doc || note) && <GuidePage id={doc ? "workspace" : "note"} />}
+      <div className="workspace-heading" data-guide="workspace-heading">
         <div>
           <Link className="source" to="/library">
             ← Library
@@ -109,7 +122,7 @@ function WorkspaceInner({ id }: { id: string }) {
           <div ref={setNoteActions} className="workspace-note-actions" />
         </div>
       </div>
-      <div className="mobile-tabs">
+      <div className="mobile-tabs" data-guide="workspace-tabs">
         <button
           className={tab === "pdf" ? "active" : ""}
           onClick={() => setTab("pdf")}
@@ -169,7 +182,7 @@ function WorkspaceInner({ id }: { id: string }) {
         <section
           className={`notes-panel ${tab === "notes" || standalone ? "mobile-visible" : ""}`}
         >
-          <div className="notes-heading">
+          <div className="notes-heading" data-guide="note-heading">
             <BookOpen size={18} />
             <strong>Your notes</strong>
             <button className="text-button" onClick={newNote}>
@@ -453,6 +466,7 @@ function NoteEditor({
           <span className="eyebrow">YOUR NOTE</span>
         </div>
         <input
+          data-guide="note-title"
           className="note-title"
           aria-label="Note title"
           value={n.title}
@@ -470,7 +484,7 @@ function NoteEditor({
             }
           />
         )}
-        <div className="save-line">
+        <div className="save-line" data-guide="note-save">
           <button className="text-button" onClick={() => flush()}>
             {status}
           </button>
@@ -492,7 +506,7 @@ function NoteEditor({
           }
           onExcerpt={onReviewer}
         />
-        <div className="actions note-actions">
+        <div className="actions note-actions" data-guide="note-export">
           <button className="secondary" onClick={() => window.print()}>
             Print note / PDF
           </button>
@@ -610,7 +624,7 @@ function PDFReader({
   }, [pdf, page, zoom, width]);
   return (
     <>
-      <div className="reader-toolbar">
+      <div className="reader-toolbar" data-guide="pdf-controls">
         <button
           aria-label="Previous page"
           className="icon-button"

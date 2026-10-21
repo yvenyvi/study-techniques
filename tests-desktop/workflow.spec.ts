@@ -7,6 +7,10 @@ import { openBridge } from "./bridge";
 import { pdf } from "./pdf.mjs";
 import { checkTimerPreferences } from "../tests/timer-preferences-flow.mjs";
 import { checkRichEditor } from "../tests/editor-flow.mjs";
+import {
+  checkIntroGuide,
+  suppressRemainingGuides,
+} from "../tests/guides-flow.mjs";
 
 test("desktop UI uses real native storage, survives browser-data removal, and exports a transferable ZIP", async ({
   page,
@@ -63,6 +67,8 @@ test("desktop UI uses real native storage, survives browser-data removal, and ex
     await expect(
       page.getByText("Desktop · saved on this computer"),
     ).toBeVisible();
+    await checkIntroGuide(page);
+    await suppressRemainingGuides(page);
     await page
       .getByRole("link", { name: "Library", exact: true })
       .first()

@@ -197,7 +197,7 @@ export function PageTitle({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="page-heading">
+    <div className="page-heading" data-guide="page-heading">
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>

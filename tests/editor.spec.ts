@@ -1,5 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { readFile } from "node:fs/promises";
+import { disableGuidesForContext } from "./guides-flow.mjs";
 import { unzipSync, strFromU8 } from "fflate";
 import { checkRichEditor, assertRichNote } from "./editor-flow.mjs";
 
@@ -116,6 +117,7 @@ test("document formatting, tables, and columns survive offline reload, printing,
   });
 
   const restoredContext = await browser.newContext();
+  await disableGuidesForContext(restoredContext);
   try {
     const restored = await restoredContext.newPage();
     await restored.goto(`${new URL(page.url()).origin}/app/settings`);

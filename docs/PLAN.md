@@ -29,6 +29,8 @@ Use a calm academic design. All core features work offline after the first succe
 
 These are routes within one application. Main navigation contains Home, Library, Reviewers, Goals, and Settings; courses and workspaces open from relevant items.
 
+Each main page type has a short interactive introduction on its first visit, including separate PDF, standalone note, reviewer editing, and practice guides. Highlight real controls, keep optional practice tasks safe, and allow skipping or replaying from Page guide. Store guide progress separately from study records so guides never interfere with restoring an empty workspace.
+
 ### Study workspace
 
 - Notes use a document-style toolbar for text formatting, highlights, tables, and saved one-/two-/three-column layouts. Keep formatting in structured content through offline saves and ZIP backups. See the document editor section of [ARCHITECTURE.md](ARCHITECTURE.md) for platform support and behavior.

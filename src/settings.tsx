@@ -8,6 +8,8 @@ import { backup, restore, download } from "./backup";
 import { PageTitle, report } from "./shared";
 import { Download, Upload } from "lucide-react";
 import { saveFocusPreferences } from "./timer-preferences";
+import { GuidePage } from "./guides";
+import { resetGuideProgress } from "./guides-progress";
 export function Settings({ ready }: { ready: boolean }) {
   const settings = useLiveQuery(() => db.settings.get("preferences"), []);
   const [focus, setFocus] = useState(25);
@@ -44,6 +46,7 @@ export function Settings({ ready }: { ready: boolean }) {
   }, []);
   return (
     <>
+      <GuidePage id="settings" />
       <PageTitle
         eyebrow="MAKE THIS SPACE YOURS"
         title="Settings & your data"
@@ -52,6 +55,7 @@ export function Settings({ ready }: { ready: boolean }) {
       <section className="panel">
         <h2>Focus preferences</h2>
         <form
+          data-guide="focus-preferences"
           className="inline-form"
           onSubmit={async (e) => {
             e.preventDefault();
@@ -127,7 +131,7 @@ export function Settings({ ready }: { ready: boolean }) {
             : "Background alerts depend on your browser. Timer progress is saved even when alerts are unavailable."}
         </p>
       </section>
-      <section className="panel">
+      <section className="panel" data-guide="offline-storage">
         <h2>Offline & storage</h2>
         {isDesktop ? (
           <>
@@ -191,7 +195,7 @@ export function Settings({ ready }: { ready: boolean }) {
           </>
         )}
       </section>
-      <section className="panel">
+      <section className="panel" data-guide="backup-tools">
         <h2>Backup & restore</h2>
         <p>
           Export PDFs, notes, reviewers, goals, and history as a ZIP. Restore
@@ -246,6 +250,24 @@ export function Settings({ ready }: { ready: boolean }) {
             />
           </label>
         </div>
+      </section>
+      <section className="panel" data-guide="guide-settings">
+        <h2>Page guides</h2>
+        <p>
+          Each page has a short introduction with optional things to try. Use
+          Page guide at the top to replay the current page’s guide anytime.
+        </p>
+        <button
+          className="secondary"
+          onClick={() => {
+            resetGuideProgress();
+            report(
+              "Page guides reset. They’ll appear when you next open each page. Your study work is unchanged.",
+            );
+          }}
+        >
+          Show all guides again
+        </button>
       </section>
     </>
   );

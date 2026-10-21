@@ -7,6 +7,10 @@ import { access, mkdir, readdir } from "node:fs/promises";
 import { pdf } from "../tests-desktop/pdf.mjs";
 import { checkTimerPreferences } from "../tests/timer-preferences-flow.mjs";
 import { checkRichEditor, assertRichNote } from "../tests/editor-flow.mjs";
+import {
+  checkIntroGuide,
+  suppressRemainingGuides,
+} from "../tests/guides-flow.mjs";
 if (process.platform !== "win32")
   throw Error("This smoke check requires Windows.");
 const executable =
@@ -111,6 +115,8 @@ async function close(page) {
 }
 try {
   let page = await launch();
+  await checkIntroGuide(page);
+  await suppressRemainingGuides(page);
   await page
     .getByRole("link", { name: "Library", exact: true })
     .first()
@@ -150,6 +156,10 @@ try {
   await page.screenshot({ path: "release/desktop-smoke.png", fullPage: true });
   await close(page);
   page = await launch();
+  await expect(
+    page.getByRole("button", { name: "Page guide", exact: true }),
+  ).toBeEnabled();
+  await expect(page.locator(".page-guide-card")).toHaveCount(0);
   await page
     .getByRole("link", { name: "Library", exact: true })
     .first()

@@ -15,6 +15,7 @@ import {
 import { PageTitle, CourseSelect, report } from "./shared";
 import { GoalRow } from "./goals";
 import { DeleteButton } from "./delete";
+import { GuidePage } from "./guides";
 import { Plus, Upload, ArrowUpRight, Search, FileText } from "lucide-react";
 export function Library({ courseView = false }: { courseView?: boolean }) {
   const { id } = useParams();
@@ -56,6 +57,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
   }
   return (
     <>
+      <GuidePage id={courseView ? "course" : "library"} />
       <PageTitle
         eyebrow={courseView ? "YOUR COURSE" : "COLLECT • ORGANIZE • EXPLORE"}
         title={
@@ -71,13 +73,14 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
       >
         <div className="actions">
           <button
+            data-guide="new-course"
             className="secondary"
             onClick={() => setShowCourse(!showCourse)}
           >
             <Plus size={17} />
             New course
           </button>
-          <label className="button">
+          <label className="button" data-guide="import-pdf">
             {busy ? (
               "Importing…"
             ) : (
@@ -157,7 +160,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
           ))}
         </div>
       )}
-      <div className="toolbar">
+      <div className="toolbar" data-guide="library-search">
         <label className="search">
           <Search size={18} />
           <input
@@ -193,7 +196,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
       )}
       {courseView && (
         <>
-          <section className="section">
+          <section className="section" data-guide="course-reviewers">
             <h2>Course reviewers</h2>
             {reviewers
               .filter((r) => r.courseId === id)
@@ -234,7 +237,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
           )}
         </>
       )}
-      <section className="section">
+      <section className="section" data-guide="library-notes">
         <div className="section-heading">
           <h2>{courseView ? "Course notes" : "Your notes"}</h2>
           <button

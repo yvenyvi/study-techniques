@@ -4,6 +4,7 @@ import { useLiveQuery } from "./storage/live";
 import { db } from "./data";
 import { PageTitle } from "./shared";
 import { GoalRow } from "./goals";
+import { GuidePage } from "./guides";
 import {
   Plus,
   Leaf,
@@ -37,6 +38,7 @@ export function Home() {
   const count = useLiveQuery(() => db.documents.count(), []) || 0;
   return (
     <>
+      <GuidePage id="overview" />
       <PageTitle
         eyebrow="A LITTLE PROGRESS, EVERY DAY"
         title="Make room for understanding."
@@ -99,7 +101,7 @@ export function Home() {
           <span>Goals completed</span>
         </div>
       </div>
-      <section className="section">
+      <section className="section" data-guide="overview-goals">
         <div className="section-heading">
           <h2>Your next small steps</h2>
           <Link to="/goals">
@@ -120,7 +122,7 @@ export function Home() {
           </div>
         )}
       </section>
-      <div className="two-column">
+      <div className="two-column" data-guide="overview-recent">
         <section className="section">
           <div className="section-heading">
             <h2>Pick up where you left off</h2>
