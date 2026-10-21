@@ -1,7 +1,7 @@
 // Runs the actual compiled Windows app through WebView2's development CDP port.
 // The debugging switch is set only for this CI process, never in the installer.
 import { chromium, expect } from "@playwright/test";
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 import { resolve, join } from "node:path";
 import { access, mkdir, readdir } from "node:fs/promises";
 import { pdf } from "../tests-desktop/pdf.mjs";
@@ -16,6 +16,10 @@ async function launch() {
     env: {
       ...process.env,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: "--remote-debugging-port=9222",
+      WEBVIEW2_USER_DATA_FOLDER: join(
+        process.env.RUNNER_TEMP,
+        "StudyRoomWebviewTest",
+      ),
     },
     stdio: "inherit",
   });
@@ -23,13 +27,42 @@ async function launch() {
     throw error;
   });
   const deadline = Date.now() + 45000;
+  let lastConnectionError = "";
   while (true) {
     try {
       const response = await fetch("http://127.0.0.1:9222/json/version");
       if (response.ok) break;
-    } catch {}
-    if (Date.now() > deadline)
+    } catch (error) {
+      lastConnectionError = `${error.message}: ${error.cause?.code || ""}`;
+    }
+    if (Date.now() > deadline) {
+      console.error("Debug endpoint:", lastConnectionError);
+      console.error(
+        execFileSync(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-Command",
+            "Get-Process study-room,msedgewebview2 -ErrorAction SilentlyContinue | Select-Object Name,Id,MainWindowTitle | ConvertTo-Json -Compress; Get-CimInstance Win32_Process -Filter \"name='msedgewebview2.exe'\" | ForEach-Object { [pscustomobject]@{ Id=$_.ProcessId; HasDebugPort=($_.CommandLine -match 'remote-debugging-port=9222') } } | ConvertTo-Json -Compress",
+          ],
+          { encoding: "utf8" },
+        ),
+      );
+      console.error(
+        "Native database exists:",
+        await access(
+          join(
+            process.env.LOCALAPPDATA,
+            "com.studyroom.desktop",
+            "study-room.sqlite3",
+          ),
+        ).then(
+          () => true,
+          () => false,
+        ),
+      );
       throw Error("Study Room did not expose its test WebView2 session.");
+    }
     if (processHandle.exitCode !== null)
       throw Error("Study Room exited during startup.");
     await new Promise((resolve) => setTimeout(resolve, 250));
