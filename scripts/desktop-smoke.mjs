@@ -158,6 +158,15 @@ try {
   await expect(page.locator(".tiptap")).toContainText(
     "actual Windows Tauri commands",
   );
+  // Library note links intentionally open the standalone note view. Open the
+  // PDF card separately to verify that its file also survived the restart.
+  await page
+    .getByRole("link", { name: "Library", exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole("link", { name: "Windows native reading", exact: true })
+    .click();
   await expect(page.locator(".textLayer")).toContainText(
     "Working memory supports learning.",
     { timeout: 15000 },
