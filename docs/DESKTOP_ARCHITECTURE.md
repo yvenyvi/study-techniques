@@ -68,7 +68,7 @@ npm run desktop:dev
 npm run desktop:build -- --bundles nsis
 ```
 
-The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run uploads `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums as diagnostic artifacts, then installs and verifies that exact package. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.2.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
+The NSIS installer installs for the current user and bundles the WebView2 offline installer. `.github/workflows/desktop.yml` builds and verifies Windows on GitHub Actions. Each run uploads `Study-Room-Windows-x64-Setup.exe` and SHA-256 checksums as diagnostic artifacts, then installs and verifies that exact package. Failed native checks block publication. A manually dispatched publish run creates the `desktop-v1.3.0` GitHub pre-release; it must complete successfully before the landing page advertises a download. Subsequent releases need a new version/tag and verification.
 
 ## Verification
 
@@ -102,3 +102,9 @@ Supporting checks passed: 16 shared unit/data tests, 6 TypeScript-to-Rust/SQLite
 Supporting checks passed: 18 shared unit/data tests, 6 TypeScript-to-Rust/SQLite integration tests, 20 web browser workflows, and the desktop browser-to-native-storage workflow. Browser checks cover merged/split table cells, print styling, responsive columns, offline recovery, and ZIP restoration. The live Vercel editor passed formatting and offline recovery at iPad width. Native iPad analysis, tests, and an unsigned simulator build passed with advanced notes protected as read-only previews.
 
 Timer verification now waits for the Settings save acknowledgement before reloading. The corrected flow also passed against real SQLite with every write delayed by 500 ms; unchanged paused countdown text is not used as a save acknowledgement.
+
+### Interactive page guides — version 1.3
+
+[The Windows 1.3 verification run](https://github.com/yvenyvi/study-techniques/actions/runs/39571326135) built and installed the published package, exercised first-visit guidance and manual replay, and confirmed that dismissed guides stay dismissed after restarting the actual app. Existing PDF, rich notes, timer preferences, and native library recovery checks also passed.
+
+Supporting checks passed: 21 shared unit/data tests, 5 Rust persistence tests, 6 TypeScript-to-Rust/SQLite integration tests, 35 web browser workflows, and the desktop browser-to-native-storage workflow. Live Vercel checks covered first visits, hands-on search, keyboard navigation, replay, and offline use. Guide progress uses local UI storage independently of SQLite and ZIP backups; it does not make an empty study library ineligible for restore. These guides ship in the web and Windows apps; the native Flutter iPad app does not yet include them.
