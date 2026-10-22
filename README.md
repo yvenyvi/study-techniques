@@ -40,6 +40,8 @@ Open the displayed localhost URL for the landing page, or `/app/` for the worksp
 4. Create a goal with an explicit completion criterion, link materials, and start a focus session. Ending the timer does not automatically complete your goal.
 5. Resume saved materials offline. Export a ZIP backup from Settings regularly.
 
+Open **Focus zone** in navigation, or **Enter focus zone** in the expanded timer, for a quiet full-screen view of the same timer. Start, pause, or resume there without resetting a session. **Session controls** lets you choose a goal or end a session; **Leave focus zone** returns to your workspace. The ambient background works offline, has a pause control, and starts still when your device prefers reduced motion.
+
 Use **Delete note** beside a Library/course note or in the pinned study-workspace toolbar. That toolbar keeps note and PDF deletion visible while scrolling. Use **Delete PDF** on its Library card or in the reading workspace. Confirm the named item before removing it; deleting a PDF preserves its notes and reviewers. Notes open for editing in another tab must be closed before deleting them from Library.
 
 Home, Library/Course, Study Workspace, Reviewers/Practice, Goals & History, and Settings are connected application routes. The mobile workspace switches between reading and writing. Notes and reviewers support browser printing / Save as PDF.

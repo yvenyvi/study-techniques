@@ -275,3 +275,33 @@ test("unsaved edits prevent downloading or installing an update", async ({
     await storage.close();
   }
 });
+
+test("native Focus zone keeps the same saved timer when switching views", async ({
+  page,
+  context,
+}) => {
+  const storage = await setup(context, { enabled: false });
+  try {
+    await page.goto("/app.html");
+    await page
+      .getByRole("button", { name: "Start timer", exact: true })
+      .click();
+    await page.getByRole("link", { name: "Focus zone", exact: true }).click();
+    await expect(page).toHaveURL(/#\/focus$/);
+    await expect(
+      page.getByRole("button", { name: "Pause timer", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Pause timer", exact: true })
+      .click();
+    const time = await page.locator(".time-display").innerText();
+    await page
+      .getByRole("link", { name: "Leave focus zone", exact: true })
+      .click();
+    await expect(page.locator(".time-display")).toHaveText(time);
+    await page.reload();
+    await expect(page.locator(".time-display")).toHaveText(time);
+  } finally {
+    await storage.close();
+  }
+});

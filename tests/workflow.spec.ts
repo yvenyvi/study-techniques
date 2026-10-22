@@ -1,3 +1,4 @@
+import { chooseOption } from "./select-flow.mjs";
 import { test, expect } from "./fixtures";
 function pdf() {
   const parts = ["%PDF-1.4\n"];
@@ -179,9 +180,7 @@ test("PDF excerpts retain page links and can be copied into a reviewer", async (
     el.dispatchEvent(new Event("mouseup", { bubbles: true }));
   });
   await page.getByRole("button", { name: "Add selection to reviewer" }).click();
-  await page
-    .getByRole("combobox", { name: "Reviewer", exact: true })
-    .selectOption({ label: "Linked reviewer" });
+  await chooseOption(page, "Reviewer", "Linked reviewer");
   await page.getByRole("button", { name: "Copy to reviewer" }).click();
   await expect(
     page.getByRole("dialog", { name: "Add to reviewer" }),
@@ -450,9 +449,15 @@ for (const viewport of [
       page.getByRole("button", { name: "Saved", exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "New", exact: true }).click();
-    await expect(page.getByLabel("Choose note").locator("option")).toHaveCount(
-      2,
-    );
+    await page
+      .getByRole("combobox", { name: "Choose note", exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole("listbox", { name: "Choose note", exact: true })
+        .getByRole("option"),
+    ).toHaveCount(2);
+    await page.keyboard.press("Escape");
     await expect(page.getByLabel("Note title")).toHaveValue("Session — notes");
     await page.getByLabel("Note title").fill("Second note");
     await page.locator(".tiptap").fill("Delete this second note.");
@@ -471,9 +476,15 @@ for (const viewport of [
     await page.reload();
     if (viewport.width < 700)
       await page.getByRole("button", { name: "Notes", exact: true }).click();
-    await expect(page.getByLabel("Choose note").locator("option")).toHaveCount(
-      1,
-    );
+    await page
+      .getByRole("combobox", { name: "Choose note", exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole("listbox", { name: "Choose note", exact: true })
+        .getByRole("option"),
+    ).toHaveCount(1);
+    await page.keyboard.press("Escape");
     await page
       .getByRole("button", { name: "Delete PDF “Session”", exact: true })
       .click();
@@ -596,14 +607,17 @@ test("goal materials remain usable on narrow screens and link to the saved goal"
   await expect(page).toHaveURL(/study/);
   await page.goto("/app/goals");
   await expect(
-    page.getByRole("button", { name: /Course.*No course/ }),
+    page.getByRole("combobox", { name: "Course (optional)", exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: /Study materials.*Choose PDFs/ })
+    .getByRole("combobox", { name: "Study materials (optional)", exact: true })
     .click();
-  const material = page.getByRole("checkbox", { name: `PDF: ${title}` });
-  await material.check();
-  await expect(material).toBeChecked();
+  const material = page.getByRole("option", {
+    name: `PDF: ${title}`,
+    exact: true,
+  });
+  await material.click();
+  await expect(material).toHaveAttribute("aria-selected", "true");
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
@@ -643,19 +657,24 @@ test("goal dropdowns explain optional choices and support keyboard dismissal", a
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/app/goals");
-  const course = page.getByRole("button", { name: /Course.*No course/ });
+  const course = page.getByRole("combobox", {
+    name: "Course (optional)",
+    exact: true,
+  });
   await course.focus();
   await page.keyboard.press("Enter");
   await expect(course).toHaveAttribute("aria-expanded", "true");
-  await page.keyboard.press("Tab");
+  await page.keyboard.press("ArrowDown");
   await expect(
-    page.getByRole("radio", { name: "No course — general goal" }),
-  ).toBeFocused();
+    page.getByRole("option", { name: "No course — general goal", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(course).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(course).toBeFocused();
   await expect(course).toHaveAttribute("aria-expanded", "false");
-  const materials = page.getByRole("button", {
-    name: /Study materials.*Choose PDFs/,
+  const materials = page.getByRole("combobox", {
+    name: "Study materials (optional)",
+    exact: true,
   });
   await materials.click();
   await expect(

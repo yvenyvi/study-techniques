@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { Ref } from "./data";
 import { report } from "./shared";
+import { CustomSelect } from "./custom-select";
 import { documentColumns, editorExtensions } from "./editor-schema";
 import "./editor.css";
 
@@ -200,11 +201,11 @@ function DocumentToolbar({
             role="group"
             aria-label="Font and paragraph style"
           >
-            <select
+            <CustomSelect
               aria-label="Paragraph style"
               value={state.heading}
-              onChange={(e) => {
-                const value = e.target.value;
+              onChange={(selected) => {
+                const value = selected;
                 if (value === "paragraph")
                   editor.chain().focus().setParagraph().run();
                 else
@@ -214,48 +215,45 @@ function DocumentToolbar({
                     .setHeading({ level: Number(value) as 1 | 2 | 3 })
                     .run();
               }}
-            >
-              <option value="paragraph">Normal text</option>
-              {[1, 2, 3].map((level) => (
-                <option value={level} key={level}>
-                  Heading {level}
-                </option>
-              ))}
-            </select>
-            <select
+              options={[
+                { value: "paragraph", label: "Normal text" },
+                ...[1, 2, 3].map((level) => ({
+                  value: String(level),
+                  label: `Heading ${level}`,
+                })),
+              ]}
+            />
+            <CustomSelect
               aria-label="Font family"
               value={state.font}
-              onChange={(e) => {
+              onChange={(value) => {
                 const chain = editor.chain().focus();
-                if (e.target.value) chain.setFontFamily(e.target.value).run();
+                if (value) chain.setFontFamily(value).run();
                 else chain.unsetFontFamily().run();
               }}
-            >
-              <option value="">Default font</option>
-              {["Arial", "Georgia", "Times New Roman", "Courier New"].map(
-                (font) => (
-                  <option key={font} value={font}>
-                    {font}
-                  </option>
+              options={[
+                { value: "", label: "Default font" },
+                ...["Arial", "Georgia", "Times New Roman", "Courier New"].map(
+                  (font) => ({ value: font, label: font }),
                 ),
-              )}
-            </select>
-            <select
+              ]}
+            />
+            <CustomSelect
               aria-label="Font size"
               value={state.size}
-              onChange={(e) => {
+              onChange={(value) => {
                 const chain = editor.chain().focus();
-                if (e.target.value) chain.setFontSize(e.target.value).run();
+                if (value) chain.setFontSize(value).run();
                 else chain.unsetFontSize().run();
               }}
-            >
-              <option value="">11 pt</option>
-              {[8, 10, 12, 14, 16, 18, 24, 32, 48].map((size) => (
-                <option key={size} value={`${size}pt`}>
-                  {size} pt
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "11 pt" },
+                ...[8, 10, 12, 14, 16, 18, 24, 32, 48].map((size) => ({
+                  value: `${size}pt`,
+                  label: `${size} pt`,
+                })),
+              ]}
+            />
           </div>
         </div>
         <div className="editor-toolbar-row">
@@ -307,23 +305,20 @@ function DocumentToolbar({
             </ToolButton>
             <label className="editor-color-label" title="Highlight color">
               <span className="sr-only">Highlight color</span>
-              <select
+              <CustomSelect
                 aria-label="Highlight color"
                 value={state.highlightColor}
-                onChange={(e) =>
-                  editor
-                    .chain()
-                    .focus()
-                    .setHighlight({ color: e.target.value })
-                    .run()
+                onChange={(value) =>
+                  editor.chain().focus().setHighlight({ color: value }).run()
                 }
-              >
-                <option value="#fff2a8">Yellow</option>
-                <option value="#c9efd4">Green</option>
-                <option value="#cfe7fa">Blue</option>
-                <option value="#f8d3e3">Pink</option>
-                <option value="#e5d7fa">Purple</option>
-              </select>
+                options={[
+                  { value: "#fff2a8", label: "Yellow", color: "#fff2a8" },
+                  { value: "#c9efd4", label: "Green", color: "#c9efd4" },
+                  { value: "#cfe7fa", label: "Blue", color: "#cfe7fa" },
+                  { value: "#f8d3e3", label: "Pink", color: "#f8d3e3" },
+                  { value: "#e5d7fa", label: "Purple", color: "#e5d7fa" },
+                ]}
+              />
             </label>
             <label className="editor-color-label" title="Text color">
               A
@@ -333,8 +328,8 @@ function DocumentToolbar({
                 value={
                   /^#[\da-f]{6}$/i.test(state.color) ? state.color : "#45583e"
                 }
-                onChange={(e) =>
-                  editor.chain().focus().setColor(e.target.value).run()
+                onChange={(event) =>
+                  editor.chain().focus().setColor(event.target.value).run()
                 }
               />
             </label>
@@ -431,11 +426,11 @@ function DocumentToolbar({
             <label className="editor-columns">
               <Columns3 size={iconSize} />
               <span>Columns</span>
-              <select
+              <CustomSelect
                 aria-label="Document columns"
                 value={state.columns}
-                onChange={(e) => {
-                  const count = documentColumns(Number(e.target.value));
+                onChange={(value) => {
+                  const count = documentColumns(Number(value));
                   editor
                     .chain()
                     .focus()
@@ -445,11 +440,12 @@ function DocumentToolbar({
                     })
                     .run();
                 }}
-              >
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </select>
+                options={[
+                  { value: "1", label: "One" },
+                  { value: "2", label: "Two" },
+                  { value: "3", label: "Three" },
+                ]}
+              />
             </label>
           </div>
           {onExcerpt && (

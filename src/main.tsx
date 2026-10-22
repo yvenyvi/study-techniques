@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
   createHashRouter,
+  useLocation,
   RouterProvider,
   Routes,
   Route,
@@ -17,12 +18,14 @@ import {
   Target,
   Settings as SettingsIcon,
   WifiOff,
+  Timer as TimerIcon,
 } from "lucide-react";
 import { registerSW } from "virtual:pwa-register";
 import { db, initializeStorage } from "./data";
 import { isDesktop } from "./platform";
 import { DesktopStore } from "./storage/desktop";
 import { report, flushEditors } from "./shared";
+import { FocusZone } from "./focus-zone";
 import { FocusTimer } from "./timer";
 import { Workspace } from "./workspace";
 import { Home } from "./home";
@@ -34,6 +37,12 @@ import { PageGuides } from "./guides";
 import { DesktopUpdatesProvider, DesktopUpdateBanner } from "./desktop-updates";
 import "./style.css";
 function App() {
+  const location = useLocation();
+  const inFocusZone = location.pathname === "/focus";
+  const returnTo = useRef("/goals");
+  useEffect(() => {
+    if (!inFocusZone) returnTo.current = location.pathname;
+  }, [location.pathname, inFocusZone]);
   const [notice, setNotice] = useState("");
   const [offline, setOffline] = useState(!navigator.onLine);
   const [ready, setReady] = useState(isDesktop);
@@ -76,7 +85,7 @@ function App() {
   }, [notice]);
   const courses = useLiveQuery(() => db.courses.toArray(), []) || [];
   return (
-    <div className="app">
+    <div className={`app ${inFocusZone ? "in-focus-zone" : ""}`}>
       <aside className="sidebar">
         <Link to="/" className="brand">
           <span className="brand-icon">
@@ -91,6 +100,7 @@ function App() {
             ["/library", "Library", LibraryIcon],
             ["/reviewers", "Reviewers", BookOpen],
             ["/goals", "Goals & history", Target],
+            ["/focus", "Focus zone", TimerIcon],
           ].map(([path, label, Icon]: any) => (
             <NavLink key={path} end={path === "/"} to={path}>
               <Icon size={19} />
@@ -138,8 +148,8 @@ function App() {
             </span>
           </div>
         </header>
-        <DesktopUpdateBanner />
-        {update && (
+        {!inFocusZone && <DesktopUpdateBanner />}
+        {update && !inFocusZone && (
           <div className="banner">
             An update is available. Save your work and end your timer first.{" "}
             <button
@@ -163,6 +173,10 @@ function App() {
             <Route path="/reviewers" element={<Reviewers />} />
             <Route path="/reviewers/:id" element={<ReviewerPage />} />
             <Route path="/goals" element={<Goals />} />
+            <Route
+              path="/focus"
+              element={<FocusZone returnTo={returnTo.current} />}
+            />
             <Route path="/settings" element={<Settings ready={ready} />} />
             <Route
               path="*"
@@ -178,7 +192,7 @@ function App() {
             Dedicated to Ivory Frias, the developer’s beloved.
           </footer>
         </main>
-        <FocusTimer />
+        <FocusTimer zone={inFocusZone} />
       </div>
       {notice && (
         <div className="toast" role="status">

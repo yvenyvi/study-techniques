@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { CustomSelect } from "./custom-select";
 import { useEffect, useRef, useState } from "react";
 import { useLiveQuery } from "./storage/live";
 import {
@@ -13,12 +15,13 @@ import {
   applyTimerPreferences,
   defaultFocusPreferences,
 } from "./timer-preferences";
-export function FocusTimer() {
+export function FocusTimer({ zone = false }: { zone?: boolean }) {
   const stored = useLiveQuery(() => db.timers.get("active"), []);
   const preferences = useLiveQuery(() => db.settings.get("preferences"), []);
   const goals = useLiveQuery(() => db.goals.toArray(), []) || [];
   const [now, setNow] = useState(Date.now());
   const [expanded, setExpanded] = useState(false);
+  useEffect(() => setExpanded(false), [zone]);
   const [owner, setOwner] = useState(false);
   const [ending, setEnding] = useState(false);
   const [note, setNote] = useState("");
@@ -167,31 +170,49 @@ export function FocusTimer() {
   }
   return (
     <>
-      <div className={`focus-dock ${expanded ? "expanded" : ""}`}>
-        <button
-          className="dock-toggle"
-          onClick={() => setExpanded(!expanded)}
-          aria-label="Expand focus timer"
-        >
-          <span
-            className="mini-ring"
-            style={{
-              background: `conic-gradient(#6d927c ${fraction * 360}deg,#e4e9e1 0)`,
-            }}
+      <div
+        className={
+          zone ? "focus-zone-timer" : `focus-dock ${expanded ? "expanded" : ""}`
+        }
+      >
+        {zone ? (
+          <>
+            <p className="zone-session">
+              {t.phase === "focus" ? "Focus zone" : "Time to recharge"}
+            </p>
+            <h1>
+              {goals.find((goal) => goal.id === t.goalId)?.title ||
+                (t.phase === "focus"
+                  ? "Make room for one thing."
+                  : "Let your mind wander.")}
+            </h1>
+          </>
+        ) : (
+          <button
+            className="dock-toggle"
+            onClick={() => setExpanded(!expanded)}
+            aria-label="Expand focus timer"
           >
-            <TimerIcon size={16} />
-          </span>
-          <span>
-            <strong>
-              {t.phase === "focus" ? "Focus session" : "Take a breath"}
-            </strong>
-            <small>
-              {goals.find((g) => g.id === t.goalId)?.title ||
-                "One small step at a time"}
-            </small>
-          </span>
-          <ChevronUp size={16} />
-        </button>
+            <span
+              className="mini-ring"
+              style={{
+                background: `conic-gradient(#6d927c ${fraction * 360}deg,#e4e9e1 0)`,
+              }}
+            >
+              <TimerIcon size={16} />
+            </span>
+            <span>
+              <strong>
+                {t.phase === "focus" ? "Focus session" : "Take a breath"}
+              </strong>
+              <small>
+                {goals.find((g) => g.id === t.goalId)?.title ||
+                  "One small step at a time"}
+              </small>
+            </span>
+            <ChevronUp size={16} />
+          </button>
+        )}
         <span className="time-display">
           {String(Math.floor(remaining / 60)).padStart(2, "0")}
           <span>:</span>
@@ -204,7 +225,28 @@ export function FocusTimer() {
           onClick={() => toggle().catch(report)}
         >
           {t.running ? <Pause size={17} /> : <Play size={17} />}
+          {zone && (
+            <span>
+              {t.running
+                ? "Pause"
+                : t.started
+                  ? "Continue"
+                  : t.phase === "break"
+                    ? "Begin break"
+                    : "Begin focus"}
+            </span>
+          )}
         </button>
+        {zone && (
+          <button
+            type="button"
+            className="text-button zone-settings-toggle"
+            aria-expanded={expanded}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? "Hide session controls" : "Session controls"}
+          </button>
+        )}
         {expanded && (
           <div className="timer-details">
             {!owner && (
@@ -215,22 +257,20 @@ export function FocusTimer() {
             )}
             <label>
               Study goal
-              <select
+              <CustomSelect
                 value={t.goalId}
                 disabled={!!t.started || !owner}
-                onChange={(e) =>
-                  db.timers.put({ ...t, goalId: e.target.value }).catch(report)
+                onChange={(goalId) =>
+                  db.timers.put({ ...t, goalId }).catch(report)
                 }
-              >
-                <option value="">Independent focus</option>
-                {goals
-                  .filter((g) => !g.done)
-                  .map((g) => (
-                    <option value={g.id} key={g.id}>
-                      {g.title}
-                    </option>
-                  ))}
-              </select>
+                aria-label="Study goal"
+                options={[
+                  { value: "", label: "Independent focus" },
+                  ...goals
+                    .filter((goal) => !goal.done)
+                    .map((goal) => ({ value: goal.id, label: goal.title })),
+                ]}
+              />
             </label>
             <p className="small muted">
               Preferences: Focus {prefs.focus} min · Break {prefs.rest} min ·
@@ -277,6 +317,11 @@ export function FocusTimer() {
                 </button>
               )}
             </div>
+            {!zone && (
+              <Link className="zone-dock-link" to="/focus">
+                Enter focus zone ↗
+              </Link>
+            )}
           </div>
         )}
       </div>

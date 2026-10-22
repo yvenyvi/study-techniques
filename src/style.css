@@ -749,72 +749,6 @@ nav a:hover {
   flex-direction: column;
   gap: 7px;
 }
-.goal-dropdown-trigger {
-  width: 100%;
-  min-height: 46px;
-  justify-content: space-between;
-  text-align: left;
-  background: #fff;
-  color: #293e36;
-  border: 1px solid #dce1d8;
-  font-size: 14px;
-  font-weight: normal;
-  padding: 10px 12px;
-}
-.goal-dropdown-trigger span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.goal-dropdown-trigger svg {
-  flex-shrink: 0;
-  transition: transform 0.15s;
-}
-.goal-dropdown-trigger[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-.goal-dropdown-menu {
-  position: absolute;
-  top: 72px;
-  left: 0;
-  right: 0;
-  z-index: 5;
-  padding: 8px;
-  max-height: 280px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: #fffefa;
-  border: 1px solid #dce1d8;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px #293e3620;
-}
-.goal-dropdown-done {
-  width: 100%;
-  margin-top: 8px;
-  min-height: 44px;
-}
-.goal-material-option:hover,
-.goal-material-option:focus-within {
-  background: #eff3ec;
-  border-radius: 4px;
-}
-.goal-material-option {
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 6px 4px;
-  cursor: pointer;
-}
-.goal-material-option input {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  accent-color: var(--green);
-}
-.goal-material-option span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
 .goal-submit {
   min-height: 44px;
   margin-top: 20px;
@@ -826,7 +760,7 @@ nav a:hover {
     gap: 16px;
   }
   .goal-form input:not([type="checkbox"]),
-  .goal-dropdown-trigger {
+  .goal-dropdown .custom-select-trigger {
     width: 100%;
     min-height: 44px;
     font-size: 16px;
@@ -988,7 +922,7 @@ nav a:hover {
 .notes-heading button {
   margin-left: auto;
 }
-.notes-panel > select {
+.notes-panel > .custom-select {
   width: 100%;
   margin-bottom: 16px;
 }
@@ -1575,7 +1509,7 @@ a:focus-visible {
   .note-actions,
   .notes-heading,
   .save-line,
-  .notes-panel > select {
+  .notes-panel > .custom-select {
     display: none !important;
   }
   .main-shell {

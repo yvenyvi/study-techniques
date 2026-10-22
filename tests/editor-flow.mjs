@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { chooseOption } from "./select-flow.mjs";
 
 export async function assertRichNote(page) {
   const body = page.getByRole("textbox", { name: "Note content", exact: true });
@@ -44,13 +45,11 @@ export async function checkRichEditor(page) {
   await expect(
     page.getByRole("button", { name: "Bold", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
-  await page
-    .getByLabel("Highlight color", { exact: true })
-    .selectOption("#f8d3e3");
-  await page.getByLabel("Font family", { exact: true }).selectOption("Georgia");
-  await page.getByLabel("Font size", { exact: true }).selectOption("14pt");
+  await chooseOption(page, "Highlight color", "Pink");
+  await chooseOption(page, "Font family", "Georgia");
+  await chooseOption(page, "Font size", "14 pt");
   await page.getByLabel("Text color", { exact: true }).fill("#3344aa");
-  await page.getByLabel("Paragraph style", { exact: true }).selectOption("2");
+  await chooseOption(page, "Paragraph style", "Heading 2");
   await page.getByRole("button", { name: "Align center", exact: true }).click();
   await page
     .getByRole("button", { name: "Insert or edit link", exact: true })
@@ -59,7 +58,7 @@ export async function checkRichEditor(page) {
     .getByLabel("Link address", { exact: true })
     .fill("https://example.com/psychology");
   await page.getByRole("button", { name: "Save link", exact: true }).click();
-  await page.getByLabel("Document columns", { exact: true }).selectOption("2");
+  await chooseOption(page, "Document columns", "Two");
 
   await body.press("ControlOrMeta+End");
   await body.press("Enter");

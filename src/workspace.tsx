@@ -1,3 +1,4 @@
+import { CustomSelect } from "./custom-select";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -191,23 +192,20 @@ function WorkspaceInner({ id }: { id: string }) {
             </button>
           </div>
           {notes && notes.length > 0 && (
-            <select
+            <CustomSelect
               aria-label="Choose note"
               value={note?.id || ""}
-              onChange={async (e) => {
-                const next = e.target.value;
+              onChange={async (next) => {
                 if (!(await flushEditors()))
                   return report("Save your edits before switching notes.");
                 setAddition(undefined);
                 setNoteId(next);
               }}
-            >
-              {notes.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.title}
-                </option>
-              ))}
-            </select>
+              options={notes.map((note) => ({
+                value: note.id,
+                label: note.title,
+              }))}
+            />
           )}
           {addition && (
             <div className="excerpt-preview">
@@ -279,38 +277,37 @@ function WorkspaceInner({ id }: { id: string }) {
             />
             <label>
               Reviewer
-              <select
+              <CustomSelect
                 value={reviewerId}
-                onChange={(e) => setReviewerId(e.target.value)}
-              >
-                <option value="">Choose reviewer</option>
-                {reviewers.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.title}
-                  </option>
-                ))}
-              </select>
+                onChange={setReviewerId}
+                aria-label="Reviewer"
+                options={[
+                  { value: "", label: "Choose reviewer" },
+                  ...reviewers.map((reviewer) => ({
+                    value: reviewer.id,
+                    label: reviewer.title,
+                  })),
+                ]}
+              />
             </label>
             <label>
               Destination field
-              <select
+              <CustomSelect
                 value={target}
-                onChange={(e) => setTarget(e.target.value)}
-              >
-                <option value="">New notes section</option>
-                {reviewers
-                  .find((r) => r.id === reviewerId)
-                  ?.sections.flatMap((s) =>
-                    Object.keys(s.fields).map((field) => (
-                      <option
-                        key={`${s.id}:${field}`}
-                        value={`${s.id}:${field}`}
-                      >
-                        {s.kind} — {field}
-                      </option>
-                    )),
-                  )}
-              </select>
+                onChange={setTarget}
+                aria-label="Destination field"
+                options={[
+                  { value: "", label: "New notes section" },
+                  ...(reviewers
+                    .find((reviewer) => reviewer.id === reviewerId)
+                    ?.sections.flatMap((section) =>
+                      Object.keys(section.fields).map((field) => ({
+                        value: `${section.id}:${field}`,
+                        label: `${section.kind} — ${field}`,
+                      })),
+                    ) || []),
+                ]}
+              />
             </label>
             <div className="actions">
               <button

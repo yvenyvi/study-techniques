@@ -92,7 +92,7 @@ export const guides: Record<GuideId, { title: string; steps: GuideStep[] }> = {
       },
       {
         title: "Keep course notes",
-        body: "Use New note for class notes or a concept summary. Notes created here belong to this course. Deleting a course moves its materials to Unfiled.",
+        body: "Use New note for class notes or a concept summary. Notes created here belong to this course. Deleting a course keeps its materials without a course.",
         target: '[data-guide="library-notes"]',
       },
     ],

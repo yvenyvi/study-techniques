@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useBlocker } from "react-router-dom";
 import { useLiveQuery } from "./storage/live";
+import { CustomSelect } from "./custom-select";
 import { db, type Ref } from "./data";
 const activeFlushers = new Set<() => Promise<boolean>>();
 export async function flushEditors() {
@@ -26,18 +27,15 @@ export function CourseSelect({
 }) {
   const courses = useLiveQuery(() => db.courses.toArray(), []) || [];
   return (
-    <select
+    <CustomSelect
       aria-label="Course"
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      <option value="">{filter ? "All courses" : "Unfiled"}</option>
-      {courses.map((c) => (
-        <option key={c.id} value={c.id}>
-          {c.name}
-        </option>
-      ))}
-    </select>
+      onChange={onChange}
+      options={[
+        { value: "", label: filter ? "All courses" : "No course" },
+        ...courses.map((course) => ({ value: course.id, label: course.name })),
+      ]}
+    />
   );
 }
 export function Source({ source }: { source: Ref }) {

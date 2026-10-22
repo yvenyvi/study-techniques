@@ -224,7 +224,7 @@ export function Library({ courseView = false }: { courseView?: boolean }) {
               onClick={async () => {
                 if (
                   confirm(
-                    "Delete this course? Its materials will move to Unfiled.",
+                    "Delete this course? Its materials will be kept without a course.",
                   )
                 ) {
                   await removeCourse(current.id);

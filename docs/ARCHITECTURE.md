@@ -123,3 +123,9 @@ The landing footer, shared web-workspace footer, and native iPad Settings includ
 The Tauri Windows app implements native SQLite metadata storage and PDF files in the app-local data directory, using the shared React interface and a platform storage adapter. It bundles study assets for offline use from first launch and exchanges version-1 ZIP backups with web and iPad. The browser app retains IndexedDB. See [the desktop architecture](DESKTOP_ARCHITECTURE.md) for transaction boundaries, file durability, routing, installer builds, signing status, and validation limits.
 
 Browser installation still uses browser-managed storage. Desktop installation uses the separate native library; move existing web materials with ZIP export/restore. Neither installation method creates an external backup or automatic sync.
+
+## Shared dropdowns and Focus zone
+
+All web and Tauri dropdowns use `CustomSelect` (`src/custom-select.tsx`): a controlled select-only combobox with a portalled listbox, selected-state indicators, keyboard navigation, typeahead, and viewport-aware placement. `CourseSelect` and the goal form reuse it. Editor commands retain their selection, disabled fieldsets remain read-only, and popup options use touch-sized rows. Use this component for new dropdowns rather than browser-native selects.
+
+`/app/focus` (or `#/focus` in Tauri) provides the Focus zone. The root app keeps one `FocusTimer` instance mounted while its presentation changes, preserving Web Lock ownership, deadlines, and drafts in session reflections. Focus zone does not create a second timer or a new storage format. Its CSS artwork needs no external service; its motion control honors reduced-motion preferences.
